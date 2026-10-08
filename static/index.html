@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Engineering Studio: Milestones 1–5 Teaching Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation & Live Telemetry HUD -->
+  <header class="top-nav">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <span>⚡</span> AI Engineering Studio
+      </div>
+      <div class="brand-subtitle">
+        Milestones 1–5 Teaching Playground
+      </div>
+    </div>
+
+    <!-- Live Telemetry HUD -->
+    <div class="telemetry-hud">
+      <div class="badge-live">
+        <span class="badge-dot"></span> GEMINI LIVE
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">LLM:</span>
+        <span class="hud-val" id="hudModel">gemini-3.5-flash-lite</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Vector DB:</span>
+        <span class="hud-val">Qdrant (:memory:)</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Keyword:</span>
+        <span class="hud-val">BM25Okapi</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Latency:</span>
+        <span class="hud-val" id="hudLatency">-- ms</span>
+      </div>
+    </div>
+
+    <!-- View & Mode Toggles -->
+    <div class="top-controls">
+      <div class="view-mode-toggle">
+        <button class="mode-btn" data-mode="visual" id="btnModeVisual">Visual Lab</button>
+        <button class="mode-btn active" data-mode="split" id="btnModeSplit">Split View</button>
+        <button class="mode-btn" data-mode="code" id="btnModeCode">Code Studio</button>
+      </div>
+      <button class="btn-presenter" id="btnPresenterToggle">
+        <span>🎓</span> Presenter Mode
+      </button>
+    </div>
+  </header>
+
+  <!-- App Container: Sidebar + Workspace -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (Milestones 1 to 5) -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Core Milestones</div>
+      
+      <button class="milestone-nav-btn active" data-milestone="m1">
+        <span class="m-icon">🟢</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 1</span>
+          <span class="m-name">Basic RAG Pipeline</span>
+          <span class="m-tag">Chunking, Embeddings, Qdrant</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="m2">
+        <span class="m-icon">🔵</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 2</span>
+          <span class="m-name">Hybrid Search & RRF</span>
+          <span class="m-tag">Dense + BM25 + Rank Fusion</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="m3">
+        <span class="m-icon">🟣</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 3</span>
+          <span class="m-name">Single ReAct Agent</span>
+          <span class="m-tag">Reason + Act + LangGraph</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="m4">
+        <span class="m-icon">🟠</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 4</span>
+          <span class="m-name">Multi-Agent Orchestrator</span>
+          <span class="m-tag">Supervisor & Specialized Sub-Agents</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="m5">
+        <span class="m-icon">🟡</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 5</span>
+          <span class="m-name">Knowledge Assistant & MCP</span>
+          <span class="m-tag">FastMCP & Pydantic Schemas</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="m6">
+        <span class="m-icon">🛡️</span>
+        <div class="m-info">
+          <span class="m-number">Milestone 6</span>
+          <span class="m-name">Guardrails & Evaluation</span>
+          <span class="m-tag">Attention Paper, Hallucination Judge, Ragas</span>
+        </div>
+      </button>
+
+
+      <!-- Sidebar Footer / Teaching Tip -->
+      <div class="sidebar-footer">
+        <div class="teacher-tip-box">
+          <div class="tip-title">💡 Teaching Note</div>
+          <div id="sidebarTeachingTip">
+            Use the <strong>Split View</strong> to demonstrate how visual pipeline nodes map directly to line-by-line LangChain and LangGraph code.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      
+      <!-- Milestone Header Card -->
+      <section class="milestone-header-card">
+        <div class="m-badge-row">
+          <span class="m-pill" id="mBadgePill">Milestone 1</span>
+          <span style="font-size: 11px; color: var(--text-dim);" id="mSubcategory">Retrieval Foundation</span>
+        </div>
+        <h1 class="m-header-title" id="mTitle">Basic RAG (Retrieval-Augmented Generation)</h1>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;" id="mProblemSolved">
+          LLMs have knowledge cutoffs and hallucinate on company data. RAG retrieves relevant passages from a vector database and grounds the LLM response in factual documents.
+        </p>
+
+        <div class="m-metaphor-box" id="mMetaphorBox">
+          <strong>Real-World Analogy:</strong> An open-book exam where the student flips to the exact indexed page and cites the verified answer instead of guessing.
+        </div>
+
+        <div class="concept-tags" id="mConceptTags">
+          <span class="concept-tag">RecursiveCharacterTextSplitter</span>
+          <span class="concept-tag">gemini-embedding-2</span>
+          <span class="concept-tag">QdrantVectorStore</span>
+          <span class="concept-tag">LCEL Chains</span>
+        </div>
+      </section>
+
+      <!-- Dual Lens View Container (Visual Lab + Code Studio) -->
+      <div class="dual-lens-container view-split" id="dualLensContainer">
+        
+        <!-- Left Panel: Interactive Visual Lab -->
+        <section class="visual-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🎮</span> Interactive Visual Lab
+            </div>
+            <span style="font-size: 11px; color: var(--text-dim);">Live Execution & Visualization</span>
+          </div>
+
+          <!-- Flow Diagram Card -->
+          <div class="flow-diagram-card">
+            <div class="flow-diagram-title">System Architecture & Active Pipeline Stages</div>
+            <div class="flow-nodes-row" id="flowDiagramNodes">
+              <!-- Dynamically populated by visualizers.js -->
+            </div>
+          </div>
+
+          <!-- Control Sandbox & Parameters -->
+          <div class="control-sandbox-card">
+            
+            <!-- Milestone Specific Knobs -->
+            <div class="controls-row" id="milestoneKnobsRow">
+              <div class="control-item">
+                <label class="control-label">
+                  <span>Chunk Size (chars):</span>
+                  <span id="lblChunkSize">300</span>
+                </label>
+                <input type="range" min="150" max="800" step="50" value="300" class="slider-input" id="sliderChunkSize">
+              </div>
+
+              <div class="control-item">
+                <label class="control-label">
+                  <span>Chunk Overlap (chars):</span>
+                  <span id="lblChunkOverlap">60</span>
+                </label>
+                <input type="range" min="0" max="150" step="10" value="60" class="slider-input" id="sliderChunkOverlap">
+              </div>
+
+              <div class="control-item" id="itemRRFK" style="display: none;">
+                <label class="control-label">
+                  <span>RRF Constant (k):</span>
+                  <span id="lblRRFK">60</span>
+                </label>
+                <input type="range" min="10" max="100" step="5" value="60" class="slider-input" id="sliderRRFK">
+              </div>
+
+              <div class="control-item" id="itemStrictness" style="display: none;">
+                <label class="control-label">
+                  <span>Faithfulness SLA Threshold:</span>
+                  <span id="lblStrictness">0.80</span>
+                </label>
+                <input type="range" min="0.50" max="0.95" step="0.05" value="0.80" class="slider-input" id="sliderStrictness">
+              </div>
+            </div>
+
+
+            <!-- Classroom Presets Selector -->
+            <div class="preset-selector-row">
+              <span class="preset-title-label"><span>🎯</span> 1-Click Teaching Presets:</span>
+              <div id="presetsContainer" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Query Input Box -->
+            <div class="query-box-wrap">
+              <input type="text" class="query-input" id="txtQueryInput" placeholder="Enter query or select a teaching preset...">
+              <button class="btn-run-query" id="btnRunQuery">
+                <span>⚡</span> Run Live Lab
+              </button>
+            </div>
+          </div>
+
+          <!-- Results & Inspector Tabs -->
+          <div class="results-card">
+            <div class="tabs-nav">
+              <button class="tab-btn active" data-tab="tabAnswer" id="btnTabAnswer">Answer & Citations</button>
+              <button class="tab-btn" data-tab="tabTrace" id="btnTabTrace">Execution Trace</button>
+              <button class="tab-btn" data-tab="tabVisual" id="btnTabVisual">Visual Inspector</button>
+            </div>
+
+            <!-- Tab 1: Answer -->
+            <div class="tab-content active" id="tabAnswer">
+              <div class="answer-box" id="answerDisplay">
+                Select a teaching preset above and click <strong>"Run Live Lab"</strong> to see live Gemini execution.
+              </div>
+            </div>
+
+            <!-- Tab 2: Execution Trace -->
+            <div class="tab-content" id="tabTrace">
+              <div class="trace-timeline" id="traceTimeline">
+                <div style="font-size: 12px; color: var(--text-dim); padding: 12px;">No active trace yet. Run a query to inspect live pipeline execution.</div>
+              </div>
+            </div>
+
+            <!-- Tab 3: Visual Inspector -->
+            <div class="tab-content" id="tabVisual">
+              <div id="visualInspectorContent">
+                <div style="font-size: 12px; color: var(--text-dim); padding: 12px;">Inspector updates dynamically based on the active milestone.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Panel: Code Studio & Blueprint -->
+        <section class="code-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>💻</span> Code Studio & Blueprint
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="code-selection-hint"><span>💡</span> Double-click / Select code for Analogy & Alts</span>
+              <span style="font-size: 11px; color: var(--text-dim);">Standard Production Implementation</span>
+            </div>
+          </div>
+
+          <!-- Code Card -->
+          <div class="code-card">
+            <div class="code-card-header">
+              <div class="code-title" id="codeBlueprintTitle">Milestone 1: Basic RAG Pipeline (LangChain LCEL)</div>
+              <button class="btn-copy-code" id="btnCopyCode">Copy Code</button>
+            </div>
+            <pre class="code-display" id="codeDisplayArea" title="Double click or select any code token to view details, real-world analogy, and industry alternatives"># Loading Python code blueprint...</pre>
+          </div>
+
+          <!-- Pedagogical Code Annotations -->
+          <div class="annotations-card">
+            <div class="ann-title"><span>🔍</span> Line-by-Line Pedagogical Breakdown</div>
+            <div class="ann-list" id="codeAnnotationsList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating Code Concept Explainer Popover -->
+  <div id="codeExplainerPopover" class="code-explainer-popover" style="display: none;">
+    <div class="popover-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 14px;">⚡</span>
+        <span class="popover-term-badge" id="popoverTerm">Concept</span>
+      </div>
+      <button class="popover-close-btn" id="popoverCloseBtn" title="Close (Esc)">✕</button>
+    </div>
+
+    <!-- Details Section -->
+    <div class="popover-section">
+      <div class="popover-sec-title sec-title-details"><span>📘</span> What It Is & Production Role</div>
+      <div class="popover-desc" id="popoverDetails">Loading engineering details...</div>
+    </div>
+
+    <!-- Analogy Section -->
+    <div class="popover-section">
+      <div class="popover-sec-title sec-title-analogy"><span>💡</span> Real-World Analogy (Teaching Hook)</div>
+      <div class="popover-analogy-box" id="popoverAnalogy">Loading analogy...</div>
+    </div>
+
+    <!-- Alternatives Section -->
+    <div class="popover-section">
+      <div class="popover-sec-title sec-title-alts"><span>🔄</span> Production Alternatives & Trade-offs</div>
+      <div class="popover-alts-list" id="popoverAlternatives">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="popover-actions">
+      <button class="popover-btn popover-btn-secondary" id="popoverCopyBtn">📋 Copy Symbol</button>
+      <button class="popover-btn popover-btn-primary" id="popoverPinInspectorBtn">🔍 Open in Visual Inspector</button>
+    </div>
+  </div>
+
+  <script src="js/concepts.js"></script>
+  <script src="js/visualizers.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
+
