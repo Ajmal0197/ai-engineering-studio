@@ -10,6 +10,7 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-FF6F00?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
 [![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-DC2626?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-FastMCP-6366F1?style=for-the-badge)](https://modelcontextprotocol.io/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 <br/>
@@ -107,6 +108,7 @@ Double-click or highlight **any token or line of code** in the Code Studio to di
 
 ## 🛠️ Technology Stack
 
+- **Package & Project Manager**: [uv](https://github.com/astral-sh/uv) (Extremely fast, deterministic lockfile resolver) / `pip`
 - **Backend**: FastAPI, Uvicorn, Python 3.12
 - **LLM & Embeddings**: Google Gemini 3.5 Flash Lite (`gemini-3.5-flash-lite`), Gemini Embeddings (`gemini-embedding-2`)
 - **Agent & RAG Orchestration**: LangChain, LangGraph (`StateGraph`, `ToolNode`), LangChain-Qdrant
@@ -121,15 +123,20 @@ Double-click or highlight **any token or line of code** in the Code Studio to di
 ## ⚡ Quick Start (Local Setup)
 
 ### 1. Clone Repository & Setup Environment
+
+#### Option A: Using `uv` (Recommended — 10x-100x Faster)
 ```bash
 git clone https://github.com/YOUR_USERNAME/ai-engineering-studio.git
 cd ai-engineering-studio
 
-# Create and activate virtual environment
+# uv automatically creates a virtual environment and synchronizes uv.lock in seconds:
+uv sync
+```
+
+#### Option B: Using standard `pip` & `venv`
+```bash
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install production dependencies
 pip install -r requirements.txt
 ```
 
@@ -146,6 +153,14 @@ PORT=8000
 > *Get a free API key with generous tier limits from [Google AI Studio](https://aistudio.google.com/apikey).*
 
 ### 3. Launch Teaching Studio
+
+**With `uv`:**
+```bash
+uv run server.py
+# or: uv run uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**With standard Python:**
 ```bash
 python server.py
 ```
