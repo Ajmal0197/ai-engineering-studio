@@ -1,5 +1,5 @@
 /**
- * AI Engineering Teaching Playground — Main Application Controller (Milestones 1–5)
+ * AI Engineering Teaching Playground — Main Application Controller (Milestones 1–6)
  */
 
 const MILESTONE_CONFIG = {

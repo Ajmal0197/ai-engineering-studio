@@ -18,7 +18,7 @@
 <br/>
 
 ### 🌐 **Live Demo:** [https://ai-engineering-studio-gi6o.onrender.com/](https://ai-engineering-studio-gi6o.onrender.com/)
-### 📖 **Companion Deep-Dive:** [RAG for Beginners: 5 Levels of Building an AI That Actually Knows Your Stuff](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
+### 📖 **Companion Deep-Dive:** [From Basic RAG to Production Guardrails: 6 Progressive Levels Explained](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
 
 <br/>
 
@@ -30,7 +30,7 @@
 
 ## 📖 Overview
 
-> 💡 **Companion Article:** This repository is the official interactive project for the guide: **[RAG for Beginners: 5 Levels of Building an AI That Actually Knows Your Stuff](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)** published on DEV.to. Follow along to see every milestone and architectural pattern in action.
+> 💡 **Companion Article:** This repository is the official interactive project for the guide: **[From Basic RAG to Production Guardrails: 6 Progressive Levels Explained](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)** published on DEV.to. Follow along to see every milestone and architectural pattern in action.
 
 The **AI Engineering Studio** is an open-source, interactive classroom platform built to teach production-level generative AI engineering. Rather than relying on toy abstractions or simulated math mocks, the studio executes **100% standard production libraries**—pairing an interactive **Visual Lab** side-by-side with a **Code Studio Blueprint** in a synchronized Dual-Lens UI.
 

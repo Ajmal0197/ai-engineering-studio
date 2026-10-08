@@ -1,7 +1,7 @@
 """
-AI Engineering Teaching Playground Server (Milestones 1–5)
+AI Engineering Teaching Playground Server (Milestones 1–6)
 ==========================================================
-Standardized FastAPI backend powering Milestones 1 through 5 with official
+Standardized FastAPI backend powering Milestones 1 through 6 with official
 LangChain, LangGraph, Qdrant, BM25, and Pydantic integrations.
 """
 
@@ -182,7 +182,7 @@ def explain_code_selection(req: CodeExplainRequest):
         structured = llm.with_structured_output(CodeExplanationResponse)
         
         prompt = (
-            f"You are an elite AI Engineering Instructor teaching Milestones 1 to 5. "
+            f"You are an elite AI Engineering Instructor teaching Milestones 1 to 6. "
             f"A student double-clicked or selected this code snippet in Milestone {req.milestone.upper()}:\n\n"
             f"SELECTED CODE / KEYWORD:\n\"{cleaned_selection}\"\n\n"
             f"Surrounding Code Context:\n\"{req.code_context or 'Standard LangChain / LangGraph / Qdrant setup'}\"\n\n"
@@ -209,7 +209,7 @@ def explain_code_selection(req: CodeExplainRequest):
 
 
 # ===========================================================================
-# Pedagogical Presets for Milestones 1–5
+# Pedagogical Presets for Milestones 1–6
 # ===========================================================================
 
 @app.get("/api/presets")
@@ -298,7 +298,7 @@ def get_presets():
 
 
 # ===========================================================================
-# Standard Production Code Blueprints for Milestones 1–5
+# Standard Production Code Blueprints for Milestones 1–6
 # ===========================================================================
 
 @app.get("/api/code-blueprint/{milestone_id}")
@@ -644,5 +644,5 @@ app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
-    print(f"🚀 Launching AI Engineering Teaching Playground (M1-M5) on http://localhost:{port}")
+    print(f"🚀 Launching AI Engineering Teaching Playground (M1-M6) on http://localhost:{port}")
     uvicorn.run("server:app", host="0.0.0.0", port=port, reload=True)
