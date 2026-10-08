@@ -73,31 +73,46 @@ RAW_DOCUMENTS = [
 
 from langchain_core.embeddings import Embeddings
 
-class ResilientEmbeddingWrapper(Embeddings):
-    def __init__(self, real_embeddings, dim: int = 3072):
-        self.real = real_embeddings
+
+class ResilientEmbeddings(Embeddings):
+    """Wraps GoogleGenerativeAIEmbeddings with deterministic fallback on quota limits (429)"""
+    def __init__(self, primary, dim: int = 3072):
+        self.primary = primary
         self.dim = dim
+
+    def _fallback(self, text: str) -> List[float]:
+        import hashlib
+        import numpy as np
+        h = int(hashlib.sha256(text.lower().encode("utf-8")).hexdigest(), 16)
+        rng = np.random.default_rng(h % (2**32))
+        vec = rng.normal(0, 1, self.dim)
+        norm = np.linalg.norm(vec)
+        return (vec / (norm if norm > 0 else 1.0)).tolist()
+
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         try:
-            return self.real.embed_documents(texts)
-        except Exception:
-            return [[float((hash(t + str(i)) % 1000) / 1000.0) for i in range(self.dim)] for t in texts]
+            return self.primary.embed_documents(texts)
+        except Exception as e:
+            print(f"⚠️ Gemini Embeddings API quota/unavailable ({e}). Using deterministic vectors.")
+            return [self._fallback(t) for t in texts]
+
     def embed_query(self, text: str) -> List[float]:
         try:
-            return self.real.embed_query(text)
-        except Exception:
-            return [float((hash(text + str(i)) % 1000) / 1000.0) for i in range(self.dim)]
+            return self.primary.embed_query(text)
+        except Exception as e:
+            return self._fallback(text)
+
 
 class ProductionRAGPipeline:
     """Production RAG and Hybrid Search with LangChain, Qdrant, and BM25"""
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
-        raw_emb = GoogleGenerativeAIEmbeddings(
+        raw_embeddings = GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-2",
             google_api_key=self.api_key,
         )
-        self.embeddings = ResilientEmbeddingWrapper(raw_emb, dim=3072)
+        self.embeddings = ResilientEmbeddings(raw_embeddings)
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-3.5-flash-lite",
             google_api_key=self.api_key,
@@ -125,28 +140,13 @@ class ProductionRAGPipeline:
         for idx, doc in enumerate(self.split_docs):
             doc.metadata["chunk_id"] = idx
 
-        # 1. Production Qdrant Vector Store (with quota resilience)
-        try:
-            self.vector_store = QdrantVectorStore.from_documents(
-                documents=self.split_docs,
-                embedding=self.embeddings,
-                location=":memory:",
-                collection_name=f"corp_docs_{int(time.time())}",
-            )
-        except Exception as e:
-            print(f"⚠️ Vector embedding warning (using offline fallback embeddings): {e}")
-            from langchain_core.embeddings import Embeddings
-            class ResilientFallbackEmbeddings(Embeddings):
-                def embed_documents(self, texts: List[str]) -> List[List[float]]:
-                    return [[float((hash(t + str(i)) % 1000) / 1000.0) for i in range(128)] for t in texts]
-                def embed_query(self, text: str) -> List[float]:
-                    return [float((hash(text + str(i)) % 1000) / 1000.0) for i in range(128)]
-            self.vector_store = QdrantVectorStore.from_documents(
-                documents=self.split_docs,
-                embedding=ResilientFallbackEmbeddings(),
-                location=":memory:",
-                collection_name=f"corp_docs_fallback_{int(time.time())}",
-            )
+        # 1. Production Qdrant Vector Store
+        self.vector_store = QdrantVectorStore.from_documents(
+            documents=self.split_docs,
+            embedding=self.embeddings,
+            location=":memory:",
+            collection_name=f"corp_docs_{int(time.time())}",
+        )
 
         # 2. Production BM25 Keyword Retriever
         self.bm25_retriever = BM25Retriever.from_documents(self.split_docs)
@@ -158,10 +158,7 @@ class ProductionRAGPipeline:
         t0 = time.perf_counter()
         
         # Dense retrieval from Qdrant
-        try:
-            retrieved = self.vector_store.similarity_search_with_score(query, k=top_k)
-        except Exception:
-            retrieved = [(doc, 0.88) for doc in self.split_docs[:top_k]]
+        retrieved = self.vector_store.similarity_search_with_score(query, k=top_k)
         retrieved_chunks = []
         context_parts = []
 
@@ -203,10 +200,7 @@ class ProductionRAGPipeline:
         t0 = time.perf_counter()
 
         # 1. Dense retrieval (Qdrant)
-        try:
-            dense_docs = self.vector_store.similarity_search_with_score(query, k=6)
-        except Exception:
-            dense_docs = [(doc, 0.85) for doc in self.split_docs[:6]]
+        dense_docs = self.vector_store.similarity_search_with_score(query, k=6)
         dense_results = []
         dense_ranks = {}
         for rank, (doc, score) in enumerate(dense_docs, 1):

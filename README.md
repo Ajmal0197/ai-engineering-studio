@@ -11,6 +11,7 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-DC2626?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-FastMCP-6366F1?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-engineering-studio-gi6o.onrender.com/)
+[![Prerequisites](https://img.shields.io/badge/Foundations-PREREQUISITES.md-8A2BE2?style=for-the-badge&logo=markdown&logoColor=white)](PREREQUISITES.md)
 [![DEV.to Article](https://img.shields.io/badge/DEV.to-Companion%20Guide-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -18,6 +19,7 @@
 <br/>
 
 ### 🌐 **Live Demo:** [https://ai-engineering-studio-gi6o.onrender.com/](https://ai-engineering-studio-gi6o.onrender.com/)
+### 📚 **Foundations & Prerequisites Guide:** [PREREQUISITES.md](PREREQUISITES.md) *(Python for GenAI, Vectors, LCEL, LangGraph, FastMCP & Guardrails with output samples)*
 ### 📖 **Companion Deep-Dive:** [From Basic RAG to Production Guardrails: 6 Progressive Levels Explained](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
 
 <br/>
@@ -30,24 +32,13 @@
 
 ## 📖 Overview
 
+> 📚 **Core Foundations & Need-to-Know Concepts:** New to GenAI or transitioning from another language? Read the standalone **[Prerequisites Guide](PREREQUISITES.md)** covering Python for GenAI, Pydantic v2, Vector Mathematics, LangChain LCEL, LangGraph Agents, FastMCP, and Guardrails with production code and exact output samples.
+>
 > 💡 **Companion Article:** This repository is the official interactive project for the guide: **[From Basic RAG to Production Guardrails: 6 Progressive Levels Explained](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)** published on DEV.to. Follow along to see every milestone and architectural pattern in action.
 
 The **AI Engineering Studio** is an open-source, interactive classroom platform built to teach production-level generative AI engineering. Rather than relying on toy abstractions or simulated math mocks, the studio executes **100% standard production libraries**—pairing an interactive **Visual Lab** side-by-side with a **Code Studio Blueprint** in a synchronized Dual-Lens UI.
 
 Learners can trigger live Gemini pipelines, adjust retrieval hyperparameters in real time, inspect claim-by-claim hallucination evaluations, and double-click any code token to view its real-world analogy and production alternatives.
-
-## 📚 Foundations & Prerequisites (P1 through P6)
-
-Before diving into complex multi-agent architectures, the studio includes dedicated interactive visual labs and production blueprints for 6 essential prerequisites:
-
-| Prerequisite | Focus Area | Core Concepts | Live Interactive Lab Feature |
-| :--- | :--- | :--- | :--- |
-| **Prereq 1 (P1)** | **Python Essentials for GenAI** | Type Hints, `Pydantic v2` (`BaseModel`, `Field`), `@tool` decorator, async generators | Live Pydantic type validator intercepting malformed payloads before model execution |
-| **Prereq 2 (P2)** | **Embeddings & Vector Math** | High-dimensional space (3072 dims), Cosine Similarity, Dot Product ($A \cdot B$), Euclidean norms | Live Cosine Similarity calculator with interactive 2D geometric vector angle projection |
-| **Prereq 3 (P3)** | **LangChain & LCEL Primitives** | Declarative Unix pipes (`prompt \| llm \| parser`), `ChatPromptTemplate`, `StrOutputParser` | 3-stage pipe inspector tracking variable injection, AIMessage tensors, and string extraction |
-| **Prereq 4 (P4)** | **LangGraph State Machines** | Redux-like mental model, `StateGraph`, `TypedDict`, `add_messages` reducer, conditional edges | Agent state reducer tracer showing message accumulation without history loss |
-| **Prereq 5 (P5)** | **Vector DBs & Chunking** | `RecursiveCharacterTextSplitter`, chunk size vs overlap trade-offs, HNSW indexing graphs | Real-time slider adjusting chunk window and overlap across sample corporate documents |
-| **Prereq 6 (P6)** | **Protocols & Evaluation Ops** | FastMCP wire protocol, JSON-RPC 2.0, Ragas Triad (Faithfulness, Relevancy, Recall) | Schema validator and objective claim-by-claim grounding audit scorecard |
 
 ---
 
