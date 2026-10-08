@@ -126,7 +126,7 @@ Double-click or highlight **any token or line of code** in the Code Studio to di
 
 #### Option A: Using `uv` (Recommended — 10x-100x Faster)
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-engineering-studio.git
+git clone https://github.com/Ajmal0197/ai-engineering-studio.git
 cd ai-engineering-studio
 
 # uv automatically creates a virtual environment and synchronizes uv.lock in seconds:
