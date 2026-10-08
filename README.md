@@ -11,12 +11,14 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-DC2626?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-FastMCP-6366F1?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-engineering-studio-gi6o.onrender.com/)
+[![DEV.to Article](https://img.shields.io/badge/DEV.to-Companion%20Guide-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 <br/>
 
 ### 🌐 **Live Demo:** [https://ai-engineering-studio-gi6o.onrender.com/](https://ai-engineering-studio-gi6o.onrender.com/)
+### 📖 **Companion Deep-Dive:** [RAG for Beginners: 5 Levels of Building an AI That Actually Knows Your Stuff](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)
 
 <br/>
 
@@ -27,6 +29,8 @@
 ---
 
 ## 📖 Overview
+
+> 💡 **Companion Article:** This repository is the official interactive project for the guide: **[RAG for Beginners: 5 Levels of Building an AI That Actually Knows Your Stuff](https://dev.to/ajmal_hasan/rag-for-beginners-5-levels-of-building-an-ai-that-actually-knows-your-stuff-4mmg)** published on DEV.to. Follow along to see every milestone and architectural pattern in action.
 
 The **AI Engineering Studio** is an open-source, interactive classroom platform built to teach production-level generative AI engineering. Rather than relying on toy abstractions or simulated math mocks, the studio executes **100% standard production libraries**—pairing an interactive **Visual Lab** side-by-side with a **Code Studio Blueprint** in a synchronized Dual-Lens UI.
 
