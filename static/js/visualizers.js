@@ -7,6 +7,48 @@
 const Visualizers = {
   // Definition of flow nodes per milestone
   flows: {
+    p1: [
+      { id: "js2py", name: "JS ➔ Python", icon: "🐍", sub: "Mental Model" },
+      { id: "types", name: "Type Hints", icon: "🏷️", sub: "str, int, List" },
+      { id: "pydantic", name: "Pydantic v2", icon: "📐", sub: "BaseModel & Field" },
+      { id: "tool", name: "@tool Decorator", icon: "🛠️", sub: "JSON Schema" },
+      { id: "async", name: "Async & Yield", icon: "⚡", sub: "Streaming" }
+    ],
+    p2: [
+      { id: "text", name: "Raw Strings", icon: "💬", sub: "Text Inputs" },
+      { id: "model", name: "Gemini Model", icon: "🧬", sub: "gemini-embedding-2" },
+      { id: "vector", name: "Dense Vectors", icon: "📊", sub: "3072 Dimensions" },
+      { id: "math", name: "Cosine Math", icon: "📐", sub: "(A·B)/(||A|| ||B||)" },
+      { id: "score", name: "Similarity", icon: "🎯", sub: "Semantic Angle" }
+    ],
+    p3: [
+      { id: "prompt", name: "ChatPrompt", icon: "📝", sub: "System & Human" },
+      { id: "pipe", name: "Pipe Operator", icon: "🔗", sub: "RunnableSequence" },
+      { id: "llm", name: "Foundation Model", icon: "🤖", sub: "Gemini Flash Lite" },
+      { id: "parser", name: "StrOutputParser", icon: "📤", sub: "Unpacks String" },
+      { id: "result", name: "Clean Output", icon: "✨", sub: "Final Response" }
+    ],
+    p4: [
+      { id: "state", name: "AgentState", icon: "📦", sub: "TypedDict" },
+      { id: "reducer", name: "add_messages", icon: "🔄", sub: "Append Reducer" },
+      { id: "nodes", name: "Graph Nodes", icon: "🧩", sub: "Functions" },
+      { id: "edges", name: "Routing Edges", icon: "🔀", sub: "Conditional Path" },
+      { id: "loop", name: "ReAct Loop", icon: "🔁", sub: "Cyclic Flow" }
+    ],
+    p5: [
+      { id: "docs", name: "Long Docs", icon: "📄", sub: "Full Content" },
+      { id: "splitter", name: "Text Splitter", icon: "✂️", sub: "Recursive Split" },
+      { id: "overlap", name: "Chunk Overlap", icon: "🧱", sub: "Context Bridge" },
+      { id: "hnsw", name: "HNSW Graph", icon: "🕸️", sub: "Qdrant Index" },
+      { id: "topk", name: "Top-K Chunks", icon: "📥", sub: "Fast Search" }
+    ],
+    p6: [
+      { id: "guard", name: "Perimeter Guard", icon: "🛡️", sub: "Input Shield" },
+      { id: "mcp", name: "FastMCP Server", icon: "🔌", sub: "JSON-RPC Protocol" },
+      { id: "judge", name: "System 2 Judge", icon: "🧑‍⚖️", sub: "Claim Auditor" },
+      { id: "triad", name: "Ragas Triad", icon: "⚖️", sub: "Faithful & Relevancy" },
+      { id: "fuse", name: "Circuit Breaker", icon: "⚡", sub: "SLA Guard" }
+    ],
     m1: [
       { id: "docs", name: "Corpus", icon: "📚", sub: "Enterprise Docs" },
       { id: "chunk", name: "Chunker", icon: "✂️", sub: "TextSplitter" },
@@ -51,6 +93,258 @@ const Visualizers = {
 
   // Pedagogical deep-dives for each node when clicked
   nodeDetails: {
+    p1: {
+      js2py: {
+        title: "1. JS/TS ➔ Python Mental Model",
+        badge: "SYNTAX TRANSLATION",
+        desc: "Maps JavaScript/TypeScript habits (arrow functions, template literals, interfaces) directly to Python (f-strings, def, Type Hints).",
+        input: "JavaScript concepts (const, let, async/await, interfaces)",
+        output: "Python idioms (Type hints, dicts, list comprehensions)",
+        code: "greeting: str = f'Hello {name}' # Like `Hello ${name}`"
+      },
+      types: {
+        title: "2. Python Type Hints",
+        badge: "STATIC TYPING",
+        desc: "Annotations using typing (List, Dict, Optional, Literal, Union) that document parameters and enable IDE autocompletion.",
+        input: "Unannotated functions",
+        output: "Type-checked signatures for static analyzers",
+        code: "def fetch_doc(id: str, limit: int = 5) -> List[dict]: ..."
+      },
+      pydantic: {
+        title: "3. Pydantic v2 Schema Enforcement",
+        badge: "DATA INTEGRITY",
+        desc: "Enforces strict validation, type coercions, and range constraints at runtime. Prevents corrupted LLM JSON from reaching databases.",
+        input: "Unchecked dictionary from HTTP or LLM",
+        output: "Validated BaseModel instance or ValidationError",
+        code: "class User(BaseModel): name: str; age: int = Field(ge=18)"
+      },
+      tool: {
+        title: "4. @tool Decorator",
+        badge: "LLM FUNCTION CALLING",
+        desc: "Extracts function docstring and type hints to create an OpenAPI JSON Schema for model tool dispatch.",
+        input: "Standard Python function",
+        output: "LangChain StructuredTool with JSON Schema",
+        code: "@tool\ndef calc(expr: str) -> str: ... # Auto-binds to LLM"
+      },
+      async: {
+        title: "5. Async & Token Generators (yield)",
+        badge: "STREAMING ENGINE",
+        desc: "Uses async/await and generators to stream LLM tokens word-by-word into WebSockets and HTTP SSE responses.",
+        input: "Continuous LLM token stream",
+        output: "Chunked string yields",
+        code: "async for chunk in model.astream(prompt): yield chunk"
+      }
+    },
+    p2: {
+      text: {
+        title: "1. Raw Natural Text",
+        badge: "INPUT STRINGS",
+        desc: "Unstructured human prose (sentences, paragraphs, queries) ready for mathematical encoding.",
+        input: "Human language query",
+        output: "Pre-tokenized string",
+        code: "text = 'I love playing with my golden retriever puppy'"
+      },
+      model: {
+        title: "2. Embedding Foundation Model",
+        badge: "NEURAL ENCODER",
+        desc: "Transformer encoder trained specifically to project semantic relationships into vector coordinates.",
+        input: "Clean text string",
+        output: "Floating point tensor",
+        code: "GoogleGenerativeAIEmbeddings(model='models/gemini-embedding-2')"
+      },
+      vector: {
+        title: "3. 3072-Dimensional Dense Vector",
+        badge: "COORDINATE SPACE",
+        desc: "List of 3072 high-precision floats representing the exact location of meaning in latent space.",
+        input: "Token sequence",
+        output: "[0.021, -0.048, 0.081, ..., -0.012] (3072 floats)",
+        code: "vec = embeddings.embed_query('my search phrase')"
+      },
+      math: {
+        title: "4. Cosine Similarity & Dot Product",
+        badge: "VECTOR ALGEBRA",
+        desc: "Calculates the cosine of the angle between two vectors: (A · B) / (||A|| * ||B||). Measures directional alignment.",
+        input: "Two vectors A and B",
+        output: "Cosine Score (-1.0 to 1.0) and Angular Distance",
+        code: "cosine_sim = dot(A, B) / (norm(A) * norm(B))"
+      },
+      score: {
+        title: "5. Semantic Distance Metric",
+        badge: "SIMILARITY SCORE",
+        desc: "Scores near 1.0 mean identical meaning; scores near 0.0 mean orthogonal (unrelated) concepts.",
+        input: "Cosine value",
+        output: "Ranked relevance score",
+        code: "assert cosine_sim >= 0.80 # High semantic confidence"
+      }
+    },
+    p3: {
+      prompt: {
+        title: "1. ChatPromptTemplate",
+        badge: "INPUT CONTRACT",
+        desc: "Structured prompt with System instructions and Human input parameters.",
+        input: "Variables: {topic}",
+        output: "List[BaseMessage(role, content)]",
+        code: "ChatPromptTemplate.from_messages([('system', '...'), ('human', '{topic}')])"
+      },
+      pipe: {
+        title: "2. Unix Pipe Operator (|)",
+        badge: "RUNNABLE SEQUENCE",
+        desc: "Chains components using Python's __or__ operator into an optimized streaming pipeline.",
+        input: "Multiple Runnables",
+        output: "RunnableSequence",
+        code: "chain = prompt | llm | StrOutputParser()"
+      },
+      llm: {
+        title: "3. Foundation Model (ChatGoogleGenerativeAI)",
+        badge: "CORE REASONING",
+        desc: "Executes inference over prompt messages and outputs an AIMessage with content and metadata.",
+        input: "Formatted Prompt Messages",
+        output: "AIMessage(content='...')",
+        code: "llm = ChatGoogleGenerativeAI(model='gemini-3.5-flash-lite')"
+      },
+      parser: {
+        title: "4. StrOutputParser",
+        badge: "OUTPUT EXTRACTION",
+        desc: "Extracts clean string content from the AIMessage object, discarding headers and usage tokens.",
+        input: "AIMessage",
+        output: "str",
+        code: "StrOutputParser().invoke(ai_message)"
+      },
+      result: {
+        title: "5. Clean Response Output",
+        badge: "CLIENT DELIVERY",
+        desc: "Final sanitized output ready for API return or UI rendering.",
+        input: "Parsed String",
+        output: "Final Response Object",
+        code: "response = chain.invoke({'topic': 'RAG'})"
+      }
+    },
+    p4: {
+      state: {
+        title: "1. Centralized Agent State",
+        badge: "STATE STORE",
+        desc: "TypedDict defining all persistent data fields shared across the state machine.",
+        input: "Graph initialization",
+        output: "State dictionary",
+        code: "class AgentState(TypedDict): messages: Sequence[BaseMessage]"
+      },
+      reducer: {
+        title: "2. add_messages Reducer",
+        badge: "STATE REDUCER",
+        desc: "Merges new messages without wiping out history (like Redux append reducer).",
+        input: "New messages from node",
+        output: "Accumulated message list",
+        code: "messages: Annotated[Sequence[BaseMessage], add_messages]"
+      },
+      nodes: {
+        title: "3. Graph Execution Nodes",
+        badge: "STATE TRANSITION",
+        desc: "Python functions that read the current state and return partial updates.",
+        input: "Current State",
+        output: "Partial State Dict",
+        code: "def agent_node(state): return {'messages': [llm.invoke(...)]}"
+      },
+      edges: {
+        title: "4. Conditional Routing Edges",
+        badge: "ROUTING GUARDS",
+        desc: "Inspects the last message to decide whether to call a tool or terminate at END.",
+        input: "State condition",
+        output: "Target node name or END",
+        code: "workflow.add_conditional_edges('agent', should_continue)"
+      },
+      loop: {
+        title: "5. Cyclic ReAct Loop",
+        badge: "AGENTIC CYCLES",
+        desc: "Allows the agent to cycle between thinking, acting with tools, and observing until complete.",
+        input: "Tool results",
+        output: "Final answer when tool calls cease",
+        code: "workflow.add_edge('tools', 'agent') # Loops back"
+      }
+    },
+    p5: {
+      docs: {
+        title: "1. Raw Long-Form Documents",
+        badge: "INPUT TEXT",
+        desc: "Multi-page PDFs, manuals, and policies that exceed single prompt focus.",
+        input: "Unstructured files",
+        output: "Document objects",
+        code: "Document(page_content='...', metadata={'source': 'manual.pdf'})"
+      },
+      splitter: {
+        title: "2. Recursive Character Splitter",
+        badge: "TEXT CHUNKER",
+        desc: "Splits text hierarchically on paragraph, line, and sentence boundaries.",
+        input: "Full Document text",
+        output: "Passage chunks",
+        code: "RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=60)"
+      },
+      overlap: {
+        title: "3. Chunk Overlap (Shingle Window)",
+        badge: "CONTEXT BRIDGE",
+        desc: "Shares tokens between consecutive chunks to avoid breaking sentences across borders.",
+        input: "Contiguous text",
+        output: "Overlapping chunk windows",
+        code: "chunk_overlap=60 # Preserves cross-boundary entities"
+      },
+      hnsw: {
+        title: "4. HNSW Vector Graph",
+        badge: "APPROXIMATE SEARCH",
+        desc: "Hierarchical graph structure enabling sub-millisecond nearest neighbor lookup in Qdrant.",
+        input: "Chunk embeddings",
+        output: "In-memory proximity graph",
+        code: "QdrantVectorStore.from_documents(..., location=':memory:')"
+      },
+      topk: {
+        title: "5. Top-K Retrieval",
+        badge: "VERIFIED CHUNKS",
+        desc: "Fetches top-k closest passages for LLM prompt grounding.",
+        input: "Query vector",
+        output: "Top-k Document chunks",
+        code: "retriever.invoke(query, k=3)"
+      }
+    },
+    p6: {
+      guard: {
+        title: "1. Perimeter Input Shield",
+        badge: "FIREWALL DEFENSE",
+        desc: "Inspects incoming prompts for injections, jailbreaks, and PII leaks before vector search.",
+        input: "Raw user prompt",
+        output: "Sanitized prompt or BLOCKED",
+        code: "safety = inspect_input_guardrail(prompt)"
+      },
+      mcp: {
+        title: "2. FastMCP Open Standard",
+        badge: "UNIVERSAL PROTOCOL",
+        desc: "Standardizes Resources, Tools, and Prompts over JSON-RPC 2.0 (USB-C for AI).",
+        input: "Client tool call",
+        output: "Validated JSON response",
+        code: "mcp = FastMCP('AssistantServer')"
+      },
+      judge: {
+        title: "3. Claim-by-Claim Hallucination Judge",
+        badge: "SYSTEM 2 AUDIT",
+        desc: "Deconstructs answers into atomic propositions and verifies against primary sources.",
+        input: "Generated text + source chunks",
+        output: "SUPPORTED / UNSUPPORTED claims",
+        code: "audit = grounding_audit_chain.invoke(...)"
+      },
+      triad: {
+        title: "4. Ragas Evaluation Triad",
+        badge: "METRIC SCORECARD",
+        desc: "Measures Faithfulness, Answer Relevancy, and Context Recall objectively.",
+        input: "Query, Context, Answer",
+        output: "Scorecard (0.0 to 1.0)",
+        code: "faithfulness = supported_claims / total_claims"
+      },
+      fuse: {
+        title: "5. Production Circuit Breaker",
+        badge: "SAFETY SHUTOFF",
+        desc: "Suppresses hallucinated output when faithfulness falls below production SLA threshold.",
+        input: "Faithfulness score",
+        output: "Safe deflection fallback if score < threshold",
+        code: "if score < sla_threshold: return safe_fallback"
+      }
+    },
     m1: {
       docs: {
         title: "1. Enterprise Document Corpus",
@@ -685,6 +979,201 @@ const Visualizers = {
           </div>
         ` : ''}
 
+      </div>
+    `;
+  },
+
+  // =========================================================================
+  // Prerequisites Visualizers (P1, P2, P3)
+  // =========================================================================
+
+  renderP1Sandbox(data) {
+    const container = document.getElementById("visualInspectorContent");
+    if (!container) return;
+
+    const isValid = data.is_valid;
+    const badgeColor = isValid ? "var(--accent-emerald)" : "var(--accent-rose)";
+    const badgeBg = isValid ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)";
+    const badgeText = isValid ? "✅ PYDANTIC v2 VALIDATION PASSED" : "❌ SCHEMA VIOLATION REJECTED";
+
+    let errorsHtml = "";
+    if (data.errors && data.errors.length > 0) {
+      errorsHtml = `
+        <div style="margin-top: 12px; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--accent-rose); text-transform: uppercase; margin-bottom: 8px;">
+            ⚠️ Caught Validation Errors:
+          </div>
+          ${data.errors.map(err => `
+            <div style="font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: var(--font-mono);">
+              <span style="color: var(--accent-amber); font-weight: 700;">${err.loc}</span>: 
+              <span style="color: var(--text-main);">${err.msg}</span>
+              <span style="font-size: 10px; color: var(--text-dim); margin-left: 6px;">(${err.type})</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: ${badgeBg}; border: 1px solid ${badgeColor}; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 800; color: ${badgeColor}; display: flex; align-items: center; justify-content: space-between;">
+          <span>${badgeText}</span>
+          <span style="font-size: 10px; font-weight: 600;">Latency: ${data.latency_ms || 2}ms</span>
+        </div>
+
+        <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: var(--accent-indigo); text-transform: uppercase; margin-bottom: 6px;">
+            💡 Pedagogical Insight
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+            ${data.teaching_point}
+          </div>
+        </div>
+
+        ${errorsHtml}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-blue); margin-bottom: 6px;">
+              📄 Parsed Validated Data
+            </div>
+            <pre style="font-size: 11px; font-family: var(--font-mono); color: var(--text-main); overflow-x: auto; max-height: 160px;">${JSON.stringify(data.parsed_data || "Rejected", null, 2)}</pre>
+          </div>
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-purple); margin-bottom: 6px;">
+              📐 Enforced Pydantic Schema
+            </div>
+            <pre style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); overflow-x: auto; max-height: 160px;">${JSON.stringify(data.schema?.properties || {}, null, 2)}</pre>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderP2VectorMath(data) {
+    const container = document.getElementById("visualInspectorContent");
+    if (!container) return;
+
+    const simScore = data.cosine_similarity;
+    const simPercent = Math.max(0, Math.min(100, Math.round(simScore * 100)));
+    const angle = data.angle_degrees;
+    const canvas = data.canvas_2d || { vector_a: { x: 120, y: 0 }, vector_b: { x: 90, y: -70 }, angle_deg: 35 };
+
+    const scoreColor = simScore >= 0.75 ? "var(--accent-emerald)" : (simScore >= 0.45 ? "var(--accent-amber)" : "var(--accent-rose)");
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Metric Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Cosine Similarity</div>
+            <div style="font-size: 22px; font-weight: 800; color: ${scoreColor};">${simScore.toFixed(4)}</div>
+            <div style="font-size: 10px; color: var(--text-dim);">${simPercent}% Directional Alignment</div>
+          </div>
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Angular Distance</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-blue);">${angle}°</div>
+            <div style="font-size: 10px; color: var(--text-dim);">acos(cosine_sim)</div>
+          </div>
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Model Dimension</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-purple);">${data.dimension || 3072}</div>
+            <div style="font-size: 10px; color: var(--text-dim);">gemini-embedding-2</div>
+          </div>
+        </div>
+
+        <!-- Semantic Verdict Banner -->
+        <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent-indigo); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+          <span>🎯 <strong>Semantic Verdict:</strong> ${data.semantic_verdict}</span>
+          <span style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">Euclidean Dist: ${data.euclidean_distance}</span>
+        </div>
+
+        <!-- 2D Geometric Vector Plane Visualizer -->
+        <div style="background: rgba(8, 12, 22, 0.95); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; align-items: center;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
+            📐 2D Geometric Angle Projection (Origin at Center)
+          </div>
+          
+          <svg width="280" height="200" viewBox="-140 -120 280 200" style="overflow: visible;">
+            <!-- Coordinate Grid -->
+            <line x1="-120" y1="0" x2="120" y2="0" stroke="rgba(255,255,255,0.1)" stroke-dasharray="3,3" />
+            <line x1="0" y1="-100" x2="0" y2="60" stroke="rgba(255,255,255,0.1)" stroke-dasharray="3,3" />
+            
+            <!-- Arc representing angle -->
+            <path d="M 40 0 A 40 40 0 0 0 ${40 * Math.cos(angle * Math.PI / 180)} ${-40 * Math.sin(angle * Math.PI / 180)}" fill="none" stroke="var(--accent-amber)" stroke-width="2" />
+            <text x="48" y="-14" fill="var(--accent-amber)" font-size="11" font-weight="700">${angle}°</text>
+            
+            <!-- Vector A (Baseline text) -->
+            <line x1="0" y1="0" x2="${canvas.vector_a.x}" y2="${canvas.vector_a.y}" stroke="var(--accent-blue)" stroke-width="3" marker-end="url(#arrowBlue)" />
+            <circle cx="${canvas.vector_a.x}" cy="${canvas.vector_a.y}" r="4" fill="var(--accent-blue)" />
+            <text x="${canvas.vector_a.x + 8}" y="4" fill="var(--accent-blue)" font-size="11" font-weight="700">Text A</text>
+
+            <!-- Vector B (Compared text) -->
+            <line x1="0" y1="0" x2="${canvas.vector_b.x}" y2="${canvas.vector_b.y}" stroke="var(--accent-purple)" stroke-width="3" />
+            <circle cx="${canvas.vector_b.x}" cy="${canvas.vector_b.y}" r="4" fill="var(--accent-purple)" />
+            <text x="${canvas.vector_b.x + 6}" y="${canvas.vector_b.y - 4}" fill="var(--accent-purple)" font-size="11" font-weight="700">Text B</text>
+
+            <!-- Center Origin -->
+            <circle cx="0" cy="0" r="3" fill="#fff" />
+          </svg>
+
+          <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px; text-align: center;">
+            Formula: <code>cosine_similarity = (A · B) / (||A|| * ||B||)</code> = <strong>${data.cosine_similarity}</strong>
+          </div>
+        </div>
+
+      </div>
+    `;
+  },
+
+  renderP3LCELPipe(data) {
+    const container = document.getElementById("visualInspectorContent");
+    if (!container) return;
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid var(--accent-indigo); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 800; color: var(--accent-indigo); display: flex; align-items: center; justify-content: space-between;">
+          <span>🔗 DECLARED LCEL PIPELINE</span>
+          <code style="background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 4px; color: #fff;">${data.lcel_expression}</code>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Stage 1 -->
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 800; color: var(--accent-blue); text-transform: uppercase;">1. ChatPromptTemplate Formatting</span>
+              <span style="font-size: 10px; color: var(--text-dim);">Input: {topic: "${data.topic}"}</span>
+            </div>
+            <pre style="font-size: 11px; font-family: var(--font-mono); color: var(--text-main); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">${JSON.stringify(data.stage_1_prompt.output_messages, null, 2)}</pre>
+          </div>
+
+          <div style="text-align: center; color: var(--accent-indigo); font-weight: 800;">⬇️ Unix Pipe (|)</div>
+
+          <!-- Stage 2 -->
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 800; color: var(--accent-purple); text-transform: uppercase;">2. ChatGoogleGenerativeAI (gemini-3.5-flash-lite)</span>
+              <span style="font-size: 10px; color: var(--text-dim);">Output: AIMessage</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-main); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; line-height: 1.4;">
+              ${data.stage_2_llm.content}
+            </div>
+          </div>
+
+          <div style="text-align: center; color: var(--accent-indigo); font-weight: 800;">⬇️ Unix Pipe (|)</div>
+
+          <!-- Stage 3 -->
+          <div style="background: rgba(13, 18, 30, 0.85); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 800; color: var(--accent-emerald); text-transform: uppercase;">3. StrOutputParser Extraction</span>
+              <span style="font-size: 10px; color: var(--text-dim);">Final Output: str</span>
+            </div>
+            <div style="font-size: 12px; color: var(--accent-emerald); font-weight: 600; background: rgba(16, 185, 129, 0.08); padding: 8px; border-radius: 6px;">
+              ${data.stage_3_parser.final_string}
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }

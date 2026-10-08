@@ -66,13 +66,31 @@ class LLMJudgeScorecard(BaseModel):
 # Production Engine Implementation
 # ===========================================================================
 
+from langchain_core.embeddings import Embeddings
+
+class ResilientEmbeddingWrapper(Embeddings):
+    def __init__(self, real_embeddings, dim: int = 3072):
+        self.real = real_embeddings
+        self.dim = dim
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        try:
+            return self.real.embed_documents(texts)
+        except Exception:
+            return [[0.0] * self.dim for _ in texts]
+    def embed_query(self, text: str) -> List[float]:
+        try:
+            return self.real.embed_query(text)
+        except Exception:
+            return [0.0] * self.dim
+
 class ProductionEvalGuardEngine:
     def __init__(self, pdf_path: Optional[str] = None):
         if not pdf_path:
             pdf_path = str(Path(__file__).parent.parent / "attention-is-all-you-need-Paper.pdf")
         
         self.pdf_path = pdf_path
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+        raw_emb = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+        self.embeddings = ResilientEmbeddingWrapper(raw_emb, dim=3072)
         self.llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite", temperature=0.1)
         
         # Structured evaluators

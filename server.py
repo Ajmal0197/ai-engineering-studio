@@ -24,11 +24,12 @@ from engine.rag_engine import ProductionRAGPipeline
 from engine.agent_engine import ProductionReActAgent, ProductionMultiAgentOrchestrator
 from engine.mcp_engine import ProductionMCPEngine
 from engine.eval_guard_engine import ProductionEvalGuardEngine
+from engine.foundations_engine import ProductionFoundationsEngine
 
 app = FastAPI(
     title="AI Engineering Playground",
-    description="Interactive Teaching Playground for Milestones 1–6",
-    version="2.1.0",
+    description="Interactive Teaching Playground for Milestones 1–6 and Prerequisites P1–P6",
+    version="2.2.0",
 )
 
 app.add_middleware(
@@ -45,11 +46,22 @@ react_agent = ProductionReActAgent(rag_pipeline)
 multi_agent = ProductionMultiAgentOrchestrator(rag_pipeline)
 mcp_engine = ProductionMCPEngine()
 eval_guard_engine = ProductionEvalGuardEngine()
+foundations_engine = ProductionFoundationsEngine()
 
 
 # ===========================================================================
 # Request Models
 # ===========================================================================
+
+class PydanticValidateRequest(BaseModel):
+    payload: dict
+
+class VectorSimRequest(BaseModel):
+    text_a: str
+    text_b: str
+
+class LcelFlowRequest(BaseModel):
+    topic: str
 
 class ChunkRequest(BaseModel):
     chunk_size: int = 300
@@ -163,6 +175,20 @@ def m6_evaluate(req: EvalRequest):
     )
 
 
+# --- Prerequisites P1 to P6 Interactive Endpoints ---
+@app.post("/api/prereq/p1/validate-pydantic")
+def p1_validate_pydantic(req: PydanticValidateRequest):
+    return foundations_engine.test_pydantic_validation(req.payload)
+
+@app.post("/api/prereq/p2/cosine-sim")
+def p2_cosine_sim(req: VectorSimRequest):
+    return foundations_engine.calculate_vector_similarity(req.text_a, req.text_b)
+
+@app.post("/api/prereq/p3/lcel-flow")
+def p3_lcel_flow(req: LcelFlowRequest):
+    return foundations_engine.simulate_lcel_flow(req.topic)
+
+
 # --- Code Studio: Interactive Concept Explainer (Details + Analogy + Alternatives) ---
 _explanation_cache: dict = {}
 
@@ -209,12 +235,69 @@ def explain_code_selection(req: CodeExplainRequest):
 
 
 # ===========================================================================
-# Pedagogical Presets for Milestones 1–6
+# Pedagogical Presets for Milestones 1–6 & Prerequisites P1–P6
 # ===========================================================================
 
 @app.get("/api/presets")
 def get_presets():
     return [
+        # --- Foundations & Prerequisites (P1–P6) Presets ---
+        {
+            "milestone": "p1",
+            "title": "Valid Pydantic Profile (Passes)",
+            "query": '{"name": "Sarah Chen", "role": "Senior AI Architect", "experience_years": 8, "skills": ["LangGraph", "Qdrant", "Python"]}',
+            "teaching_point": "Demonstrates strict type validation and constraint checks before passing data to agents or tools.",
+        },
+        {
+            "milestone": "p1",
+            "title": "Invalid Profile (Catches Type Error)",
+            "query": '{"name": "A", "role": "AI Engineer", "experience_years": -5, "skills": []}',
+            "teaching_point": "Pydantic catches 3 violations: name min_length, negative experience, and empty skills list.",
+        },
+        {
+            "milestone": "p2",
+            "title": "High Semantic Similarity (Dogs & Companions)",
+            "query": "I love playing with my golden retriever puppy in the park || Dogs are my favorite loyal companions to take outdoors",
+            "teaching_point": "High cosine similarity (> 0.80) despite having almost completely different words.",
+        },
+        {
+            "milestone": "p2",
+            "title": "Orthogonal Semantic Vectors (AI vs Pizza)",
+            "query": "Transformer models utilize scaled dot-product self-attention mechanisms || Wood-fired Margherita pizza topped with fresh mozzarella and basil",
+            "teaching_point": "Near-zero cosine similarity reflecting orthogonal vector directions in 3072-dimensional space.",
+        },
+        {
+            "milestone": "p3",
+            "title": "LCEL Pipeline Flow (RAG Concept)",
+            "query": "Retrieval-Augmented Generation (RAG)",
+            "teaching_point": "Traces Linux pipe execution: Prompt Template -> ChatGoogleGenerativeAI -> StrOutputParser.",
+        },
+        {
+            "milestone": "p3",
+            "title": "LCEL Pipeline Flow (Vector Embeddings)",
+            "query": "High-Dimensional Vector Embeddings",
+            "teaching_point": "Demonstrates prompt formatting, raw AIMessage dispatch, and clean string parsing.",
+        },
+        {
+            "milestone": "p4",
+            "title": "LangGraph StateGraph Reducer Flow",
+            "query": "How does the add_messages reducer manage conversation state without overwriting history?",
+            "teaching_point": "Explains the Redux-like mental model: StateGraph, TypedDict state, nodes, and conditional edges.",
+        },
+        {
+            "milestone": "p5",
+            "title": "Chunk Overlap Context Retention",
+            "query": "Compare chunk size 300 with overlap 60 versus zero overlap on complex policy paragraphs",
+            "teaching_point": "Illustrates how chunk overlap stops sentences from clipping across boundaries like roof shingles.",
+        },
+        {
+            "milestone": "p6",
+            "title": "FastMCP vs Custom REST APIs",
+            "query": "Why does Model Context Protocol use JSON-RPC 2.0 with Resources, Tools, and Prompts?",
+            "teaching_point": "Explains standard AI tool connection (USB-C for AI) and automated Ragas Triad evaluation.",
+        },
+
+        # --- Core Milestones (M1–M6) Presets ---
         {
             "milestone": "m1",
             "title": "PTO Policy Check (Grounded RAG)",
@@ -304,6 +387,197 @@ def get_presets():
 @app.get("/api/code-blueprint/{milestone_id}")
 def get_code_blueprint(milestone_id: str):
     blueprints = {
+        "p1": {
+            "title": "Prerequisite 1: Python Essentials for GenAI (Pydantic & Tools)",
+            "language": "python",
+            "code": """from typing import List, Optional, Literal
+from pydantic import BaseModel, Field, ValidationError
+from langchain_core.tools import tool
+
+# 1. Pydantic v2 Schema for Type-Safe Agent Output
+class ToolInputSchema(BaseModel):
+    user_id: str = Field(description="Corporate identifier e.g. EMP-101")
+    category: Literal["EXPENSE", "PTO", "INCIDENT"] = Field(description="Action ledger category")
+    amount: float = Field(ge=0.0, description="Transaction monetary amount")
+    tags: List[str] = Field(default_factory=list, description="Categorization tags")
+
+# 2. @tool Decorator: Converts Python Function to LLM JSON Schema
+@tool(args_schema=ToolInputSchema)
+def submit_ticket(user_id: str, category: str, amount: float, tags: List[str]) -> str:
+    \"\"\"Files an internal ticket with type-safe parameters.\"\"\"
+    return f"Ticket created for {user_id}: ${amount} under {category}"
+
+# 3. Validation Enforcement Before Tool Dispatch
+raw_payload = {"user_id": "EMP-4102", "category": "EXPENSE", "amount": 125.50, "tags": ["travel"]}
+validated = ToolInputSchema.model_validate(raw_payload)
+print("Validated Schema:", validated.model_dump())""",
+            "annotations": [
+                {"line": 5, "note": "Pydantic BaseModel guarantees runtime data integrity, blocking malformed LLM tool arguments."},
+                {"line": 12, "note": "LangChain's @tool decorator automatically converts Python type annotations into an OpenAPI JSON Schema for model function calling."},
+                {"line": 18, "note": "model_validate() raises ValidationError on type mismatches, keeping databases safe from ungrounded hallucinations."},
+            ]
+        },
+        "p2": {
+            "title": "Prerequisite 2: Embeddings & Vector Math (Cosine Similarity)",
+            "language": "python",
+            "code": """import math
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+# 1. Initialize Gemini Embedding Model (3072 Dimensions)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+
+# 2. Compute Dense Vector Embeddings
+text_a = "I love playing with my puppy in the park"
+text_b = "Dogs are my favorite companions outdoors"
+vec_a = embeddings.embed_query(text_a)
+vec_b = embeddings.embed_query(text_b)
+
+# 3. Mathematical Vector Dot Product & Cosine Similarity:
+# cosine_similarity = (A · B) / (||A|| * ||B||)
+dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
+norm_a = math.sqrt(sum(a * a for a in vec_a))
+norm_b = math.sqrt(sum(b * b for b in vec_b))
+cosine_sim = dot_product / (norm_a * norm_b)
+
+angle_degrees = math.degrees(math.acos(max(-1.0, min(1.0, cosine_sim))))
+print(f"Cosine Similarity: {cosine_sim:.4f} | Angular Distance: {angle_degrees:.1f}°")""",
+            "annotations": [
+                {"line": 4, "note": "Gemini-embedding-2 encodes semantic meaning into a 3072-dimensional continuous mathematical space."},
+                {"line": 14, "note": "The dot product measures directional alignment between vectors; dividing by Euclidean norms normalizes between -1.0 and 1.0."},
+                {"line": 19, "note": "Cosine similarity measures semantic relatedness regardless of sentence length or word count differences."},
+            ]
+        },
+        "p3": {
+            "title": "Prerequisite 3: LangChain & LCEL Primitives (Linux Pipe Operator)",
+            "language": "python",
+            "code": """from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+# 1. Prompt Template (Declarative Variables)
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are an AI Engineering Instructor. Provide an analogy for:"),
+    ("human", "{concept}"),
+])
+
+# 2. Foundation Chat Model
+llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite", temperature=0.1)
+
+# 3. Declarative LCEL Pipeline (Chained via Unix Pipe '|')
+# Input Dict -> Prompt Template -> Model Invocation -> Str Parser -> Clean String
+chain = prompt | llm | StrOutputParser()
+
+# 4. Synchronous or Streaming Invocation
+result = chain.invoke({"concept": "Vector Embeddings"})
+print("LCEL Pipe Output:", result)""",
+            "annotations": [
+                {"line": 5, "note": "ChatPromptTemplate cleanly separates system persona from user dynamic input variables."},
+                {"line": 15, "note": "LangChain Expression Language (LCEL) uses Python's __or__ operator to chain Runnables declaratively with unified streaming."},
+                {"line": 18, "note": "StrOutputParser automatically unpacks AIMessage.content into a standard Python string."},
+            ]
+        },
+        "p4": {
+            "title": "Prerequisite 4: LangGraph State Machines (StateGraph & Reducers)",
+            "language": "python",
+            "code": """from typing import TypedDict, Annotated, Sequence
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langgraph.graph import StateGraph, END
+from langgraph.graph.message import add_messages
+
+# 1. Define Agent State Store (Redux-Like TypedDict)
+class AgentState(TypedDict):
+    # add_messages is a Reducer: appends new messages rather than overwriting list
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+
+# 2. Initialize StateGraph Workflow
+workflow = StateGraph(AgentState)
+
+# 3. Define Graph Nodes (Functions taking State -> returning partial State update)
+def chatbot_node(state: AgentState):
+    return {"messages": [AIMessage(content="Processed state update")]}
+
+workflow.add_node("chatbot", chatbot_node)
+workflow.set_entry_point("chatbot")
+workflow.add_edge("chatbot", END)
+
+# 4. Compile into Runnable Application
+app = workflow.compile()
+output = app.invoke({"messages": [HumanMessage(content="Hello Agent!")]})""",
+            "annotations": [
+                {"line": 8, "note": "add_messages acts as a state reducer: when a node returns messages, they append to history without race conditions."},
+                {"line": 11, "note": "StateGraph models agent loops, conditional branching, and memory persistence as an explicit finite state machine."},
+                {"line": 14, "note": "Nodes return partial dict updates that are automatically merged into the global graph state."},
+            ]
+        },
+        "p5": {
+            "title": "Prerequisite 5: Vector Databases & Chunking Strategies",
+            "language": "python",
+            "code": """from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_qdrant import QdrantVectorStore
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from qdrant_client import QdrantClient
+
+# 1. Recursive Document Chunking with Shingle Overlap
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=300,
+    chunk_overlap=60,
+    separators=["\\n\\n", "\\n", ". ", " ", ""]
+)
+chunks = splitter.split_documents(raw_docs)
+
+# 2. High-Performance In-Memory Qdrant Vector DB
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+client = QdrantClient(location=":memory:")
+vector_store = QdrantVectorStore.from_documents(
+    chunks,
+    embeddings,
+    client=client,
+    collection_name="knowledge_vault"
+)
+
+# 3. Dense Similarity Search with Distance Scores
+results = vector_store.similarity_search_with_score("vacation policy", k=2)
+for doc, score in results:
+    print(f"Ranked Chunk [Score: {score:.4f}]: {doc.page_content[:80]}...")""",
+            "annotations": [
+                {"line": 7, "note": "RecursiveCharacterTextSplitter preserves paragraph and sentence boundaries before resorting to word-level splits."},
+                {"line": 8, "note": "Chunk overlap (60 chars) prevents sentences from clipping across chunk borders like overlapping roof shingles."},
+                {"line": 17, "note": "Qdrant uses HNSW (Hierarchical Navigable Small World) graphs for sub-millisecond approximate nearest neighbor search."},
+            ]
+        },
+        "p6": {
+            "title": "Prerequisite 6: Production Protocols & Evaluation Ops (FastMCP & Ragas)",
+            "language": "python",
+            "code": """from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel, Field
+
+# 1. Model Context Protocol Server (Universal Connector)
+mcp = FastMCP("EnterpriseKnowledgeServer")
+
+# 2. MCP Resource (Read-Only Knowledge URI)
+@mcp.resource("policies://travel_limits")
+def get_travel_limits() -> str:
+    return "Domestic meal per diem is $75/day; lodging is capped at $250/night."
+
+# 3. Type-Safe MCP Tool (Callable Action with Pydantic)
+class ClaimModel(BaseModel):
+    emp_id: str = Field(description="Employee ID in format EMP-XXXX")
+    amount: float = Field(ge=0.0, description="Amount in USD")
+
+@mcp.tool()
+def submit_claim(claim: ClaimModel) -> str:
+    return f"Claim for {claim.emp_id} (${claim.amount}) filed for audit."
+
+# 4. Ragas Triad Production Evaluation Metrics:
+# - Faithfulness: (Supported claims) / (Total claims in answer)
+# - Answer Relevancy: Semantic alignment between Query and Output
+# - Context Recall: Did retriever capture all facts required to answer?""",
+            "annotations": [
+                {"line": 4, "note": "Model Context Protocol (FastMCP) is the universal open standard (USB-C for AI) connecting LLMs to data and tools."},
+                {"line": 8, "note": "MCP Resources are exposed as standardized URIs that any client (Claude, IDE, Slack) can read without custom API wrappers."},
+                {"line": 18, "note": "The Ragas Triad guarantees objective, automated CI/CD evaluation before deploying AI applications to production."},
+            ]
+        },
         "m1": {
             "title": "Milestone 1: Basic RAG Pipeline (LangChain LCEL)",
             "language": "python",

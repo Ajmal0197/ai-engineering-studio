@@ -36,6 +36,19 @@ The **AI Engineering Studio** is an open-source, interactive classroom platform 
 
 Learners can trigger live Gemini pipelines, adjust retrieval hyperparameters in real time, inspect claim-by-claim hallucination evaluations, and double-click any code token to view its real-world analogy and production alternatives.
 
+## 📚 Foundations & Prerequisites (P1 through P6)
+
+Before diving into complex multi-agent architectures, the studio includes dedicated interactive visual labs and production blueprints for 6 essential prerequisites:
+
+| Prerequisite | Focus Area | Core Concepts | Live Interactive Lab Feature |
+| :--- | :--- | :--- | :--- |
+| **Prereq 1 (P1)** | **Python Essentials for GenAI** | Type Hints, `Pydantic v2` (`BaseModel`, `Field`), `@tool` decorator, async generators | Live Pydantic type validator intercepting malformed payloads before model execution |
+| **Prereq 2 (P2)** | **Embeddings & Vector Math** | High-dimensional space (3072 dims), Cosine Similarity, Dot Product ($A \cdot B$), Euclidean norms | Live Cosine Similarity calculator with interactive 2D geometric vector angle projection |
+| **Prereq 3 (P3)** | **LangChain & LCEL Primitives** | Declarative Unix pipes (`prompt \| llm \| parser`), `ChatPromptTemplate`, `StrOutputParser` | 3-stage pipe inspector tracking variable injection, AIMessage tensors, and string extraction |
+| **Prereq 4 (P4)** | **LangGraph State Machines** | Redux-like mental model, `StateGraph`, `TypedDict`, `add_messages` reducer, conditional edges | Agent state reducer tracer showing message accumulation without history loss |
+| **Prereq 5 (P5)** | **Vector DBs & Chunking** | `RecursiveCharacterTextSplitter`, chunk size vs overlap trade-offs, HNSW indexing graphs | Real-time slider adjusting chunk window and overlap across sample corporate documents |
+| **Prereq 6 (P6)** | **Protocols & Evaluation Ops** | FastMCP wire protocol, JSON-RPC 2.0, Ragas Triad (Faithfulness, Relevancy, Recall) | Schema validator and objective claim-by-claim grounding audit scorecard |
+
 ---
 
 ## 🏛️ Comprehensive Milestones (1 through 6)

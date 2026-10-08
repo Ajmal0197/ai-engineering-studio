@@ -61,9 +61,71 @@
   <!-- App Container: Sidebar + Workspace -->
   <div class="app-container">
     
-    <!-- Sidebar Navigation (Milestones 1 to 6) -->
+    <!-- Sidebar Navigation (Prerequisites P1-P6 & Milestones M1-M6) -->
     <aside class="sidebar">
-      <div class="sidebar-title">Core Milestones</div>
+      <div class="sidebar-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>📚 Prerequisites</span>
+        <span style="font-size: 10px; background: rgba(99, 102, 241, 0.2); color: var(--accent-indigo); padding: 2px 6px; border-radius: 4px; font-weight: 600;">NEED TO KNOW</span>
+      </div>
+
+      <button class="milestone-nav-btn" data-milestone="p1">
+        <span class="m-icon">🐍</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 1</span>
+          <span class="m-name">Python for GenAI</span>
+          <span class="m-tag">Types, Pydantic, @tool, Async</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="p2">
+        <span class="m-icon">🔢</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 2</span>
+          <span class="m-name">Embeddings & Vector Math</span>
+          <span class="m-tag">Cosine Similarity, 3072-Dims</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="p3">
+        <span class="m-icon">🔗</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 3</span>
+          <span class="m-name">LangChain & LCEL</span>
+          <span class="m-tag">Prompt | Model | StrParser</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="p4">
+        <span class="m-icon">📊</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 4</span>
+          <span class="m-name">LangGraph State Machines</span>
+          <span class="m-tag">StateGraph, Reducers, Cycles</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="p5">
+        <span class="m-icon">🗄️</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 5</span>
+          <span class="m-name">Vector DBs & Chunking</span>
+          <span class="m-tag">HNSW, BM25, Chunk Overlap</span>
+        </div>
+      </button>
+
+      <button class="milestone-nav-btn" data-milestone="p6">
+        <span class="m-icon">🛡️</span>
+        <div class="m-info">
+          <span class="m-number">Prereq 6</span>
+          <span class="m-name">Protocols & Evals</span>
+          <span class="m-tag">FastMCP, LLM-as-a-Judge, Ragas</span>
+        </div>
+      </button>
+
+      <div class="sidebar-title" style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+        <span>🚀 Core Milestones</span>
+        <span style="font-size: 10px; background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); padding: 2px 6px; border-radius: 4px; font-weight: 600;">LEVELS 1–6</span>
+      </div>
       
       <button class="milestone-nav-btn active" data-milestone="m1">
         <span class="m-icon">🟢</span>

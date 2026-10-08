@@ -216,6 +216,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: calc(100vh - 61px);
+  overflow-y: auto;
 }
 
 .sidebar-title {
