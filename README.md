@@ -10,8 +10,13 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-FF6F00?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
 [![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-DC2626?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-FastMCP-6366F1?style=for-the-badge)](https://modelcontextprotocol.io/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-engineering-studio-gi6o.onrender.com/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+
+<br/>
+
+### 🌐 **Live Demo:** [https://ai-engineering-studio-gi6o.onrender.com/](https://ai-engineering-studio-gi6o.onrender.com/)
 
 <br/>
 
@@ -185,9 +190,11 @@ docker run -p 8000:8000 -e GEMINI_API_KEY="your_gemini_api_key_here" ai-engineer
 ## ☁️ 1-Click Cloud Deployment
 
 ### Deploy to Render
+> 🌐 **Live Playground URL:** [https://ai-engineering-studio-gi6o.onrender.com/](https://ai-engineering-studio-gi6o.onrender.com/)
+
 The repository includes a ready-to-use [`render.yaml`](render.yaml) specification:
 1. Fork or push this repository to your GitHub account.
-2. In the [Render Dashboard](https://dashboard.render.com/), select **New > Blueprint**.
+2. In the [Render Dashboard](https://dashboard.render.com/), select **New > Web Service** (or **New > Blueprint**).
 3. Connect your repository.
 4. Set the `GEMINI_API_KEY` secret variable when prompted.
 5. Render will automatically build the service and issue a public HTTPS domain.
