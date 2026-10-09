@@ -58,7 +58,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
+  padding: 12px 28px;
+  gap: 20px;
   background: rgba(14, 17, 24, 0.92);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
@@ -141,10 +142,12 @@ body {
   gap: 16px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border-subtle);
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
   font-size: 12px;
+  margin: 0 14px;
+  flex-shrink: 0;
 }
 
 .hud-item {
@@ -194,6 +197,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .view-mode-toggle {
@@ -2241,11 +2246,20 @@ body.presenter-mode .m-metaphor-box {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid var(--border-subtle) !important;
   color: var(--text-muted) !important;
-  margin-right: 6px;
+  padding: 8px 18px !important;
+  margin-left: 10px !important;
+  margin-right: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
 }
 .btn-glossary-nav:hover {
   background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
   color: #fff !important;
 }
 
@@ -2403,7 +2417,7 @@ body.presenter-mode .m-metaphor-box {
   background: var(--bg-surface);
   border: 1px solid var(--border-glass-light);
   border-radius: var(--radius-lg);
-  width: 920px;
+  width: 1020px;
   max-width: 95vw;
   max-height: 88vh;
   display: flex;
@@ -2412,7 +2426,7 @@ body.presenter-mode .m-metaphor-box {
   overflow: hidden;
 }
 .glossary-modal-header {
-  padding: 16px 20px;
+  padding: 20px 28px;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   justify-content: space-between;
@@ -2449,19 +2463,19 @@ body.presenter-mode .m-metaphor-box {
   background: rgba(255, 255, 255, 0.1);
 }
 .glossary-search-bar {
-  padding: 14px 20px 8px;
+  padding: 18px 28px 12px;
   position: relative;
 }
 .glossary-search-icon {
   position: absolute;
-  left: 32px;
-  top: 24px;
+  left: 42px;
+  top: 29px;
   font-size: 14px;
   opacity: 0.6;
 }
 .glossary-search-input {
   width: 100%;
-  padding: 10px 14px 10px 38px;
+  padding: 11px 16px 11px 44px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
@@ -2475,18 +2489,19 @@ body.presenter-mode .m-metaphor-box {
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
 }
 .glossary-filter-pills {
-  padding: 4px 20px 12px;
+  padding: 4px 28px 16px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .glossary-filter-pill {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-glass);
   color: var(--text-dim);
-  padding: 4px 12px;
-  border-radius: 14px;
-  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
 }
@@ -2496,21 +2511,21 @@ body.presenter-mode .m-metaphor-box {
   color: #fff;
 }
 .glossary-cards-container {
-  padding: 12px 20px 20px;
+  padding: 16px 28px 28px;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
   flex: 1;
 }
 .glossary-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   transition: var(--transition);
 }
 .glossary-card:hover {
