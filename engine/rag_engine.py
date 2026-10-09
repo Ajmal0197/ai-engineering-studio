@@ -131,20 +131,14 @@ class ProductionRAGPipeline:
 
     @property
     def vector_store(self) -> QdrantVectorStore:
-        if self.active_corpus_mode == "custom" and self.custom_vector_store is not None:
-            return self.custom_vector_store
         return self.default_vector_store
 
     @property
     def bm25_retriever(self) -> BM25Retriever:
-        if self.active_corpus_mode == "custom" and self.custom_bm25_retriever is not None:
-            return self.custom_bm25_retriever
         return self.default_bm25_retriever
 
     @property
     def split_docs(self) -> List[Document]:
-        if self.active_corpus_mode == "custom" and self.custom_split_docs:
-            return self.custom_split_docs
         return self.default_split_docs
 
     def _clean_str(self, val: Any) -> str:
@@ -319,11 +313,11 @@ class ProductionRAGPipeline:
         }
 
     def run_basic_rag(self, query: str, top_k: int = 2) -> Dict[str, Any]:
-        """Milestone 1: Production Vector RAG with Qdrant and LCEL Chain"""
+        """Milestone 1: Production Vector RAG with Qdrant and LCEL Chain (Strictly Default Enterprise Corpus)"""
         t0 = time.perf_counter()
         
-        # Dense retrieval from Qdrant
-        retrieved = self.vector_store.similarity_search_with_score(query, k=top_k)
+        # Dense retrieval from Qdrant strictly using default enterprise knowledge base
+        retrieved = self.default_vector_store.similarity_search_with_score(query, k=top_k)
         retrieved_chunks = []
         context_parts = []
 
@@ -336,6 +330,7 @@ class ProductionRAGPipeline:
                 "chunk_id": cid,
                 "title": title,
                 "text": doc.page_content,
+                "length": len(doc.page_content),
             })
             context_parts.append(f"[{title} | Chunk #{cid}]:\n{doc.page_content}")
 
@@ -364,11 +359,19 @@ class ProductionRAGPipeline:
         """Milestone 2: Production Hybrid Search (Qdrant + BM25 + Reciprocal Rank Fusion)"""
         t0 = time.perf_counter()
 
-        active_store = self.vector_store
-        active_bm25 = self.bm25_retriever
-        active_docs = self.split_docs
-        corpus_mode = self.active_corpus_mode
-        corpus_title = self.custom_doc_info.get("title", "Custom Document") if corpus_mode == "custom" else "Enterprise Document Corpus"
+        # Milestone 2 uses custom uploaded document if active; otherwise defaults to enterprise docs
+        if self.active_corpus_mode == "custom" and self.custom_vector_store and self.custom_bm25_retriever:
+            active_store = self.custom_vector_store
+            active_bm25 = self.custom_bm25_retriever
+            active_docs = self.custom_split_docs
+            corpus_mode = "custom"
+            corpus_title = self.custom_doc_info.get("title", "Custom Document")
+        else:
+            active_store = self.default_vector_store
+            active_bm25 = self.default_bm25_retriever
+            active_docs = self.default_split_docs
+            corpus_mode = "default"
+            corpus_title = "Enterprise Document Corpus"
 
         # 1. Dense retrieval (Qdrant)
         k_dense = min(6, max(len(active_docs), 1))

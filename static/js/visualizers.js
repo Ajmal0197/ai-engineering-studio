@@ -431,9 +431,12 @@ const Visualizers = {
     html += `<div class="chunk-visualizer-grid">`;
 
     chunks.forEach(chunk => {
+      const charCount = chunk.length !== undefined && chunk.length !== null && chunk.length > 0 
+        ? chunk.length 
+        : (chunk.text ? chunk.text.length : 0);
       html += `
         <div class="chunk-card">
-          <span class="chunk-badge">Chunk #${chunk.chunk_id} (${chunk.length || 0} chars)</span>
+          <span class="chunk-badge">Chunk #${chunk.chunk_id} (${charCount} chars)</span>
           <div style="margin-bottom: 6px; font-weight: 600; color: #fff;">${chunk.title || 'Document'}</div>
           <div>${chunk.text}</div>
         </div>
