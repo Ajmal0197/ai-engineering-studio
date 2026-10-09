@@ -448,10 +448,20 @@ const Visualizers = {
     const container = document.getElementById("visualInspectorContent");
     if (!container) return;
 
+    const isCustom = data.corpus_info && data.corpus_info.is_custom;
+    const corpusBadge = data.corpus_info ? `
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="m-pill" style="background: ${isCustom ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; border-color: ${isCustom ? 'var(--accent-blue)' : 'var(--accent-emerald)'}; color: ${isCustom ? 'var(--accent-blue)' : 'var(--accent-emerald)'};">
+          ${isCustom ? '🔵 Custom Document' : '🟢 Enterprise Corpus'}: ${data.corpus_info.title} (${data.corpus_info.chunk_count} Chunks)
+        </span>
+      </div>
+    ` : "";
+
     let html = `
       <div class="flow-diagram-title">Reciprocal Rank Fusion (RRF) Comparison (k = ${data.rrf_k})</div>
+      ${corpusBadge}
       <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-        BM25 catches exact identifiers (e.g. <code>E-4502</code>), while Qdrant catches semantic context.
+        BM25 catches exact identifiers and error codes, while Qdrant catches semantic intent.
         Formula: <code>score = &Sigma; 1 / (k + rank)</code>.
       </p>
       <table class="rank-ladder-table">
@@ -469,10 +479,14 @@ const Visualizers = {
 
     data.fused_results.forEach((item, index) => {
       const rankBadgeClass = index === 0 ? "rank-1" : index === 1 ? "rank-2" : "rank-3";
+      const snippet = item.text ? `<div style="font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 3px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.text}</div>` : "";
       html += `
         <tr>
           <td><span class="rank-pill ${rankBadgeClass}">#${index + 1}</span></td>
-          <td style="font-weight: 600; color: #fff;">${item.title}</td>
+          <td style="font-weight: 600; color: #fff;">
+            ${item.title || ('Chunk #' + item.chunk_id)}
+            ${snippet}
+          </td>
           <td><span style="color: var(--accent-blue);">${item.dense_rank !== "—" ? '#' + item.dense_rank : '—'}</span></td>
           <td><span style="color: var(--accent-amber);">${item.bm25_rank !== "—" ? '#' + item.bm25_rank : '—'}</span></td>
           <td><code>${item.calculation}</code></td>

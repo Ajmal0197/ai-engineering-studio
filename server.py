@@ -15,10 +15,12 @@ from dotenv import load_dotenv
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-from fastapi import FastAPI, HTTPException
+import io
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from pypdf import PdfReader
 
 from engine.rag_engine import ProductionRAGPipeline
 from engine.agent_engine import ProductionReActAgent, ProductionMultiAgentOrchestrator
@@ -59,6 +61,79 @@ class QueryRequest(BaseModel):
     query: str
     top_k: Optional[int] = 3
     rrf_k: Optional[int] = 60
+
+class CustomDocumentRequest(BaseModel):
+    title: str = "Custom Document"
+    content: str
+    category: Optional[str] = "Custom"
+    chunk_size: Optional[int] = 300
+    chunk_overlap: Optional[int] = 60
+
+# Pre-baked enterprise sample documents for 1-click Milestone 2 testing
+M2_SAMPLE_DOCUMENTS = [
+    {
+        "id": "k8s",
+        "title": "Kubernetes Cluster Operations & Failover Runbook (v1.30)",
+        "content": (
+            "Kubernetes Production Runbook - Cluster Reliability Engineering.\n\n"
+            "Incident Code ERR-K8S-7701: Etcd quorum loss detected across master control planes.\n"
+            "Remediation for ERR-K8S-7701: Stop all etcd service instances immediately. "
+            "Restore snapshot from /var/lib/etcd-backup/latest.db using 'etcdctl snapshot restore'. "
+            "Verify endpoints health on port 2379 before rejoining kube-apiserver.\n\n"
+            "Incident Code ERR-K8S-9042: OOMKilled worker nodes during distributed tensor training.\n"
+            "Remediation for ERR-K8S-9042: Cordon and drain the node using 'kubectl drain --ignore-daemonsets'. "
+            "Adjust pod memory limits in deployment spec to a minimum 32Gi and verify swap memory is disabled on Linux host.\n\n"
+            "Pod Disruption Budgets (PDB) require a minimum available replica ratio of 80% during rolling deployments. "
+            "Maximum pod graceful termination period is strictly 45 seconds before SIGKILL signal dispatch."
+        ),
+        "suggested_questions": [
+            "How do I remediate Incident Code ERR-K8S-7701?",
+            "What is the maximum graceful termination period for pods?",
+            "How do I resolve ERR-K8S-9042 when worker nodes are OOMKilled?",
+        ]
+    },
+    {
+        "id": "sla",
+        "title": "CloudScale Enterprise SLA & Billing Credit Policy",
+        "content": (
+            "CloudScale Enterprise Service Level Agreement (SLA).\n\n"
+            "1. Service Availability Guarantee: CloudScale guarantees 99.99% monthly uptime across multi-region production clusters. "
+            "Scheduled maintenance windows occur every second Sunday between 02:00 UTC and 04:00 UTC with 7 days advance notice.\n\n"
+            "2. Service Credit Penalty Tiers:\n"
+            "- If monthly uptime falls between 99.0% and 99.98%, customer receives a 15% billing credit.\n"
+            "- If monthly uptime falls between 95.0% and 98.99%, customer receives a 30% billing credit.\n"
+            "- If monthly uptime falls below 95.0%, customer receives a 100% full billing refund for that calendar month.\n"
+            "All credit claims must be lodged through billing-claims@cloudscale.io within 14 calendar days of outage closure.\n\n"
+            "3. Severity-1 Outages: Response time SLA is strictly 15 minutes 24/7/365 with Dedicated Incident Commander assigned."
+        ),
+        "suggested_questions": [
+            "What is the billing refund if monthly uptime drops below 95%?",
+            "What is the guaranteed response time SLA for Severity-1 outages?",
+            "When are scheduled maintenance windows conducted?",
+        ]
+    },
+    {
+        "id": "cardio",
+        "title": "Cardio-Shield Clinical Trial Protocol (Study CS-PHASE3-99)",
+        "content": (
+            "Cardio-Shield Clinical Protocol (Study ID: CS-PHASE3-99).\n\n"
+            "Primary Investigational Compound: CS-4092 (Selective cardiac sodium-calcium exchanger inhibitor).\n"
+            "Dosage Regimen: Initial loading dose of 50mg administered orally twice daily with meals for 14 days, "
+            "followed by a maintenance dose of 25mg once daily for 12 weeks.\n\n"
+            "Inclusion Criteria: Patients aged 45 to 78 with documented chronic heart failure (NYHA Class II-IV) and "
+            "left ventricular ejection fraction (LVEF) <= 35%.\n"
+            "Exclusion Criteria: Patients with severe hepatic impairment (Child-Pugh Class C), baseline serum potassium > 5.5 mmol/L, "
+            "or concurrent use of Class III antiarrhythmic agents like amiodarone.\n\n"
+            "Adverse Event Protocol Code AE-ALERT-22: Acute bradycardia (heart rate < 45 bpm).\n"
+            "Protocol: Suspend CS-4092 immediately, administer 0.5mg IV atropine, and continuously monitor ECG rhythm for 24 hours."
+        ),
+        "suggested_questions": [
+            "What is the recommended dosage regimen for CS-4092?",
+            "What are the exclusion criteria for patients joining the trial?",
+            "What is the emergency protocol for Adverse Event Code AE-ALERT-22?",
+        ]
+    }
+]
 
 class EvalRequest(BaseModel):
     query: str
@@ -122,7 +197,78 @@ def m1_query(req: QueryRequest):
     return rag_pipeline.run_basic_rag(req.query, top_k=req.top_k or 2)
 
 
-# --- Milestone 2: Hybrid Search & RRF ---
+# --- Milestone 2: Hybrid Search & Custom Document Management ---
+@app.get("/api/m2/corpus-status")
+def m2_corpus_status():
+    """Returns the active corpus state (default enterprise vs custom user document)"""
+    return rag_pipeline.get_corpus_status()
+
+@app.get("/api/m2/sample-documents")
+def m2_sample_documents():
+    """Returns pre-configured rich enterprise sample documents for instant testing"""
+    return M2_SAMPLE_DOCUMENTS
+
+@app.post("/api/m2/document")
+def m2_add_document(req: CustomDocumentRequest):
+    """Indexes any custom document for Hybrid Search (Dense Qdrant + Sparse BM25 + RRF)"""
+    if not req.content or not req.content.strip():
+        raise HTTPException(status_code=400, detail="Document content cannot be empty.")
+    try:
+        result = rag_pipeline.index_custom_document(
+            title=req.title,
+            content=req.content,
+            category=req.category or "Custom",
+            chunk_size=req.chunk_size or 300,
+            chunk_overlap=req.chunk_overlap or 60,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to index document: {str(e)}")
+
+@app.post("/api/m2/upload")
+async def m2_upload_file(file: UploadFile = File(...)):
+    """Uploads and indexes a document file (.txt, .md, .pdf, .json, .csv) into Hybrid Search"""
+    filename = file.filename or "uploaded_document"
+    ext = Path(filename).suffix.lower()
+    
+    try:
+        content_bytes = await file.read()
+        if not content_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+        text_content = ""
+        if ext == ".pdf":
+            reader = PdfReader(io.BytesIO(content_bytes))
+            pages = [p.extract_text() for p in reader.pages if p.extract_text()]
+            text_content = "\n\n".join(pages)
+        else:
+            try:
+                text_content = content_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                text_content = content_bytes.decode("latin-1", errors="ignore")
+
+        text_content = text_content.strip()
+        if not text_content:
+            raise HTTPException(status_code=400, detail="Could not extract readable text from uploaded file.")
+
+        title = Path(filename).stem.replace("_", " ").replace("-", " ").title()
+        result = rag_pipeline.index_custom_document(
+            title=title,
+            content=text_content,
+            category="Upload",
+        )
+        result["filename"] = filename
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file upload: {str(e)}")
+
+@app.post("/api/m2/reset-documents")
+def m2_reset_documents():
+    """Restores default enterprise knowledge corpus with 0 latency fallback"""
+    return rag_pipeline.reset_to_default_corpus()
+
 @app.post("/api/m2/hybrid")
 def m2_hybrid(req: QueryRequest):
     return rag_pipeline.run_hybrid_search(
@@ -195,8 +341,8 @@ def explain_code_selection(req: CodeExplainRequest):
         result = structured.invoke(prompt)
         _explanation_cache[cache_key] = result
         return result
-    except Exception as e:
-        fallback = CodeExplanationResponse(
+    except Exception:
+        return CodeExplanationResponse(
             term=cleaned_selection[:50],
             details=f"Code token '{cleaned_selection}' evaluated in Milestone {req.milestone.upper()}.",
             analogy="Like an essential specialized tool in an engineer's automated assembly toolkit.",

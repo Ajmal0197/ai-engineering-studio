@@ -171,6 +171,9 @@ class AppController {
       btn.innerText = "Copied! ✓";
       setTimeout(() => { btn.innerText = "Copy Code"; }, 2000);
     });
+
+    // Initialize Milestone 2 Custom Document & Corpus Manager
+    this.initM2CorpusManager();
   }
 
   async fetchHealth() {
@@ -210,6 +213,8 @@ class AppController {
       if (prereqContainer) prereqContainer.style.display = "flex";
       if (milestoneHeader) milestoneHeader.style.display = "none";
       if (dualLens) dualLens.style.display = "none";
+      const m2CorpusPanel = document.getElementById("m2CorpusPanel");
+      if (m2CorpusPanel) m2CorpusPanel.style.display = "none";
       document.getElementById("sidebarTeachingTip").innerHTML = "Explore core prerequisites with interactive code blueprints and exact output samples before diving into Milestones 1–6.";
       this.initPrerequisitesView();
       return;
@@ -244,6 +249,15 @@ class AppController {
     document.getElementById("sliderChunkSize").parentElement.parentElement.style.display = isM1 ? "flex" : "none";
     document.getElementById("itemRRFK").style.display = isM2 ? "flex" : "none";
     document.getElementById("itemStrictness").style.display = isM6 ? "flex" : "none";
+
+    // Milestone 2 Custom Document & Corpus Manager Panel
+    const m2CorpusPanel = document.getElementById("m2CorpusPanel");
+    if (m2CorpusPanel) {
+      m2CorpusPanel.style.display = isM2 ? "flex" : "none";
+      if (isM2) {
+        this.fetchM2CorpusStatus();
+      }
+    }
 
     // Render Presets for this milestone
     this.renderPresetsForMilestone(milestoneId);
@@ -501,29 +515,308 @@ class AppController {
 
   renderM2Trace(data) {
     const container = document.getElementById("traceTimeline");
+    const isCustom = data.corpus_info && data.corpus_info.is_custom;
+    const corpusDesc = isCustom
+      ? `Queried custom user document: <strong>${data.corpus_info.title}</strong> (${data.corpus_info.chunk_count} chunks indexed in Qdrant & BM25)`
+      : `Queried default enterprise knowledge base (HR PTO, Travel Expense, IT Error Codes E-4502/E-9011)`;
+
     container.innerHTML = `
+      <div class="trace-step">
+        <span class="step-badge step-action">CORPUS</span>
+        <div class="step-body">
+          <div class="step-title">${isCustom ? "Custom Document Source" : "Enterprise Corpus Source"}</div>
+          <div>${corpusDesc}</div>
+        </div>
+      </div>
       <div class="trace-step">
         <span class="step-badge step-action">STEP 1</span>
         <div class="step-body">
           <div class="step-title">Dense Qdrant Search</div>
-          <div>Retrieved candidates based on semantic meaning.</div>
+          <div>Retrieved semantically relevant candidates using high-dimensional vector embeddings.</div>
         </div>
       </div>
       <div class="trace-step">
         <span class="step-badge step-action">STEP 2</span>
         <div class="step-body">
           <div class="step-title">Sparse BM25 Search (BM25Retriever)</div>
-          <div>Retrieved candidates based on exact term frequency.</div>
+          <div>Retrieved exact keyword matches using Okapi BM25 token statistics.</div>
         </div>
       </div>
       <div class="trace-step">
         <span class="step-badge step-final">STEP 3</span>
         <div class="step-body">
           <div class="step-title">Reciprocal Rank Fusion (RRF)</div>
-          <div>Combined lists using score = &Sigma; 1 / (${data.rrf_k} + rank).</div>
+          <div>Merged rankings using formula <code>score = &Sigma; 1 / (${data.rrf_k} + rank)</code> and synthesized grounded response.</div>
         </div>
       </div>
     `;
+  }
+
+  // =========================================================================
+  // Milestone 2: Custom Document & Corpus Manager Methods
+  // =========================================================================
+
+  initM2CorpusManager() {
+    const btnToggle = document.getElementById("btnToggleAddDoc");
+    const drawer = document.getElementById("m2CustomDocDrawer");
+    const btnClose = document.getElementById("btnCloseDocDrawer");
+    const btnReset = document.getElementById("btnResetDefaultCorpus");
+    const btnIndex = document.getElementById("btnIndexCustomDoc");
+    const tabPaste = document.getElementById("btnDocTabPaste");
+    const tabUpload = document.getElementById("btnDocTabUpload");
+    const contentText = document.getElementById("txtDocContent");
+    const charCounter = document.getElementById("txtDocCharCount");
+    const dropzone = document.getElementById("fileDropzone");
+    const fileInput = document.getElementById("fileDocInput");
+
+    if (!btnToggle || !drawer) return;
+
+    // Toggle custom doc drawer
+    btnToggle.addEventListener("click", () => {
+      const isVisible = drawer.style.display === "flex";
+      drawer.style.display = isVisible ? "none" : "flex";
+    });
+
+    if (btnClose) {
+      btnClose.addEventListener("click", () => {
+        drawer.style.display = "none";
+      });
+    }
+
+    // Tab switching (Paste vs Upload)
+    if (tabPaste && tabUpload) {
+      tabPaste.addEventListener("click", () => {
+        tabPaste.classList.add("active");
+        tabUpload.classList.remove("active");
+        document.getElementById("tabDocPaste").style.display = "block";
+        document.getElementById("tabDocUpload").style.display = "none";
+      });
+      tabUpload.addEventListener("click", () => {
+        tabUpload.classList.add("active");
+        tabPaste.classList.remove("active");
+        document.getElementById("tabDocPaste").style.display = "none";
+        document.getElementById("tabDocUpload").style.display = "block";
+      });
+    }
+
+    // Character counter for pasted text
+    if (contentText && charCounter) {
+      contentText.addEventListener("input", () => {
+        charCounter.innerText = `${contentText.value.length.toLocaleString()} characters`;
+      });
+    }
+
+    // 1-Click sample pills
+    document.querySelectorAll(".sample-doc-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const sId = pill.dataset.sample;
+        this.loadM2SampleDoc(sId);
+      });
+    });
+
+    // File dropzone click & drag
+    if (dropzone && fileInput) {
+      dropzone.addEventListener("click", () => fileInput.click());
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+      dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          fileInput.files = e.dataTransfer.files;
+          this.handleSelectedFile(fileInput.files[0]);
+        }
+      });
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files[0]) {
+          this.handleSelectedFile(fileInput.files[0]);
+        }
+      });
+    }
+
+    // Index Document button
+    if (btnIndex) {
+      btnIndex.addEventListener("click", () => {
+        this.indexM2CustomDocument();
+      });
+    }
+
+    // Reset default corpus button
+    if (btnReset) {
+      btnReset.addEventListener("click", () => {
+        this.resetM2DefaultCorpus();
+      });
+    }
+  }
+
+  handleSelectedFile(file) {
+    const fileNameDisplay = document.getElementById("selectedFileName");
+    if (fileNameDisplay) {
+      fileNameDisplay.style.display = "inline-block";
+      fileNameDisplay.innerText = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    }
+    const txtTitle = document.getElementById("txtDocTitle");
+    if (txtTitle && !txtTitle.value.trim()) {
+      txtTitle.value = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+    }
+  }
+
+  async loadM2SampleDoc(sampleId) {
+    try {
+      const res = await fetch("/api/m2/sample-documents");
+      const samples = await res.json();
+      const sample = samples.find(s => s.id === sampleId);
+      if (sample) {
+        document.getElementById("btnDocTabPaste").click();
+        const txtTitle = document.getElementById("txtDocTitle");
+        const txtContent = document.getElementById("txtDocContent");
+        const charCounter = document.getElementById("txtDocCharCount");
+        if (txtTitle) txtTitle.value = sample.title;
+        if (txtContent) {
+          txtContent.value = sample.content;
+          if (charCounter) charCounter.innerText = `${sample.content.length.toLocaleString()} characters`;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load sample doc:", e);
+    }
+  }
+
+  async indexM2CustomDocument() {
+    const btn = document.getElementById("btnIndexCustomDoc");
+    const drawer = document.getElementById("m2CustomDocDrawer");
+    const fileInput = document.getElementById("fileDocInput");
+    const isUploadTab = document.getElementById("btnDocTabUpload")?.classList.contains("active");
+
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Indexing into Qdrant & BM25...`;
+
+    try {
+      let data;
+      if (isUploadTab && fileInput && fileInput.files && fileInput.files[0]) {
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        const res = await fetch("/api/m2/upload", {
+          method: "POST",
+          body: formData,
+        });
+        data = await res.json();
+      } else {
+        const title = document.getElementById("txtDocTitle").value.trim() || "Custom Document";
+        const content = document.getElementById("txtDocContent").value.trim();
+        if (!content) {
+          alert("Please enter or paste some document content to index.");
+          btn.disabled = false;
+          btn.innerHTML = `<span>⚡</span> Index Document for Hybrid Search`;
+          return;
+        }
+        const res = await fetch("/api/m2/document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content }),
+        });
+        data = await res.json();
+      }
+
+      if (data.status === "success") {
+        this.updateM2CorpusUI(data);
+        if (drawer) drawer.style.display = "none";
+      } else {
+        alert(data.detail || "Failed to index document.");
+      }
+    } catch (e) {
+      alert(`Error indexing document: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<span>⚡</span> Index Document for Hybrid Search`;
+    }
+  }
+
+  async resetM2DefaultCorpus() {
+    const btn = document.getElementById("btnResetDefaultCorpus");
+    if (btn) btn.innerHTML = `<span>⏳</span> Resetting...`;
+    try {
+      const res = await fetch("/api/m2/reset-documents", { method: "POST" });
+      const data = await res.json();
+      await this.fetchM2CorpusStatus();
+      this.renderPresetsForMilestone("m2");
+      document.getElementById("txtQueryInput").value = "How do I resolve Error code E-4502?";
+    } catch (e) {
+      console.warn("Failed to reset corpus:", e);
+    } finally {
+      if (btn) btn.innerHTML = `<span>↺</span> Restore Default Docs`;
+    }
+  }
+
+  async fetchM2CorpusStatus() {
+    try {
+      const res = await fetch("/api/m2/corpus-status");
+      const data = await res.json();
+      this.updateM2CorpusUI(data);
+    } catch (e) {
+      console.warn("Failed to fetch corpus status:", e);
+    }
+  }
+
+  updateM2CorpusUI(data) {
+    const panel = document.getElementById("m2CorpusPanel");
+    const dot = document.getElementById("m2CorpusDot");
+    const label = document.getElementById("m2CorpusActiveLabel");
+    const chunkBadge = document.getElementById("m2CorpusChunkBadge");
+    const desc = document.getElementById("m2CorpusDesc");
+    const suggRow = document.getElementById("m2CustomSuggestionsRow");
+    const suggChips = document.getElementById("m2CustomSuggChips");
+
+    if (!panel) return;
+
+    const isCustom = data.mode === "custom" || data.is_custom;
+    panel.classList.toggle("is-custom", isCustom);
+
+    if (dot) {
+      dot.className = isCustom ? "corpus-status-dot custom" : "corpus-status-dot default";
+    }
+
+    if (label) {
+      label.innerText = isCustom ? `Active Corpus: ${data.title}` : "Active Corpus: Default Enterprise Docs";
+    }
+
+    if (chunkBadge) {
+      chunkBadge.innerText = `${data.chunk_count || 0} Chunks`;
+    }
+
+    if (desc) {
+      desc.innerText = isCustom
+        ? `Custom document indexed into Qdrant Vector Store & BM25 Keyword Retriever with Reciprocal Rank Fusion.`
+        : `Pre-indexed enterprise knowledge base (HR Leave, Travel Policies, IT Error Codes).`;
+    }
+
+    // Render suggested questions chips if available
+    if (suggRow && suggChips) {
+      if (isCustom && data.suggested_questions && data.suggested_questions.length > 0) {
+        suggRow.style.display = "flex";
+        suggChips.innerHTML = data.suggested_questions.map(q => `
+          <button type="button" class="custom-sugg-chip" data-query="${this.escapeHtml(q)}">${this.escapeHtml(q)}</button>
+        `).join("");
+
+        suggChips.querySelectorAll(".custom-sugg-chip").forEach(chip => {
+          chip.addEventListener("click", () => {
+            const q = chip.dataset.query;
+            document.getElementById("txtQueryInput").value = q;
+            this.runActiveQuery();
+          });
+        });
+
+        // Pre-fill query input with first suggested question
+        if (data.suggested_questions[0]) {
+          document.getElementById("txtQueryInput").value = data.suggested_questions[0];
+        }
+      } else {
+        suggRow.style.display = "none";
+      }
+    }
   }
 
   // =========================================================================

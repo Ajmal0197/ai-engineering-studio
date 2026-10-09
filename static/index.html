@@ -261,6 +261,98 @@
               </div>
             </div>
 
+            <!-- Milestone 2: Custom Document & Corpus Manager -->
+            <div class="m2-corpus-panel" id="m2CorpusPanel" style="display: none;">
+              <!-- Corpus Banner: Active Status + Action Buttons -->
+              <div class="corpus-banner">
+                <div class="corpus-info-col">
+                  <div class="corpus-badge-row">
+                    <span class="corpus-status-dot default" id="m2CorpusDot"></span>
+                    <span class="corpus-active-label" id="m2CorpusActiveLabel">Active Corpus: Default Enterprise Docs</span>
+                    <span class="corpus-chunk-badge" id="m2CorpusChunkBadge">8 Chunks</span>
+                  </div>
+                  <div class="corpus-desc" id="m2CorpusDesc">
+                    Pre-indexed enterprise knowledge base (HR Leave, Travel Policies, IT Error Codes).
+                  </div>
+                </div>
+                
+                <div class="corpus-actions-row">
+                  <button type="button" class="btn-corpus-action btn-add-doc" id="btnToggleAddDoc">
+                    <span>📄</span> Custom Document
+                  </button>
+                  <button type="button" class="btn-corpus-action btn-reset-corpus" id="btnResetDefaultCorpus" title="Restore Default Enterprise Knowledge Base">
+                    <span>↺</span> Restore Default Docs
+                  </button>
+                </div>
+              </div>
+
+              <!-- Custom Document Builder Drawer (Collapsible) -->
+              <div class="custom-doc-drawer" id="m2CustomDocDrawer" style="display: none;">
+                <div class="custom-doc-header">
+                  <div class="custom-doc-title">
+                    <span>📥</span> Index Your Document into Hybrid Search
+                  </div>
+                  <button type="button" class="btn-close-drawer" id="btnCloseDocDrawer" title="Close Drawer">&times;</button>
+                </div>
+                
+                <!-- Quick 1-Click Sample Document Pills -->
+                <div class="quick-sample-row">
+                  <span class="quick-sample-label">⚡ 1-Click Samples:</span>
+                  <div class="sample-pills-wrap">
+                    <button type="button" class="sample-doc-pill" data-sample="k8s">☸️ Kubernetes Runbook (ERR-K8S-7701)</button>
+                    <button type="button" class="sample-doc-pill" data-sample="sla">☁️ Cloud SaaS SLA (99.99%)</button>
+                    <button type="button" class="sample-doc-pill" data-sample="cardio">💊 Cardio Protocol (CS-4092)</button>
+                  </div>
+                </div>
+
+                <!-- Input Mode Tabs: Paste Text vs File Upload -->
+                <div class="doc-input-tabs">
+                  <button type="button" class="doc-tab-btn active" data-doctab="tabPaste" id="btnDocTabPaste">✏️ Paste Text</button>
+                  <button type="button" class="doc-tab-btn" data-doctab="tabUpload" id="btnDocTabUpload">📎 Upload File (.txt, .md, .pdf)</button>
+                </div>
+
+                <!-- Tab 1: Paste Text -->
+                <div class="doc-tab-content active" id="tabDocPaste">
+                  <div class="doc-form-group">
+                    <label for="txtDocTitle" class="doc-label">Document Title:</label>
+                    <input type="text" id="txtDocTitle" class="doc-input-field" placeholder="e.g. Production Kubernetes Runbook v1.30">
+                  </div>
+                  <div class="doc-form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <label for="txtDocContent" class="doc-label">Document Text Content:</label>
+                      <span class="char-count" id="txtDocCharCount">0 characters</span>
+                    </div>
+                    <textarea id="txtDocContent" class="doc-textarea" rows="6" placeholder="Paste your policy, error runbook, architecture guide, or article here..."></textarea>
+                  </div>
+                </div>
+
+                <!-- Tab 2: Upload File -->
+                <div class="doc-tab-content" id="tabDocUpload" style="display: none;">
+                  <div class="file-dropzone" id="fileDropzone">
+                    <input type="file" id="fileDocInput" accept=".txt,.md,.pdf,.json,.csv" style="display: none;">
+                    <div class="dropzone-icon">📁</div>
+                    <div class="dropzone-text">Click to choose a file or drag & drop here</div>
+                    <div class="dropzone-sub">Supported formats: <strong>.txt</strong>, <strong>.md</strong>, <strong>.pdf</strong>, <strong>.json</strong></div>
+                    <div class="selected-file-name" id="selectedFileName" style="display: none;"></div>
+                  </div>
+                </div>
+
+                <div class="doc-drawer-footer">
+                  <span class="doc-indexing-note">
+                    ℹ️ Chunks are split via <code>RecursiveCharacterTextSplitter</code> and indexed into in-memory <strong>Qdrant</strong> & <strong>BM25</strong>.
+                  </span>
+                  <button type="button" class="btn-index-doc" id="btnIndexCustomDoc">
+                    <span>⚡</span> Index Document for Hybrid Search
+                  </button>
+                </div>
+              </div>
+
+              <!-- Suggested Questions on Custom Document (Visible when custom doc is active) -->
+              <div class="custom-suggestions-row" id="m2CustomSuggestionsRow" style="display: none;">
+                <span class="custom-sugg-label">💡 Suggested Questions on Active Document:</span>
+                <div class="custom-sugg-chips" id="m2CustomSuggChips"></div>
+              </div>
+            </div>
 
             <!-- Classroom Presets Selector -->
             <div class="preset-selector-row">

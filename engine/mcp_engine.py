@@ -9,7 +9,7 @@ Production MCP & Structured Output Engine (Milestone 5)
 
 import os
 import time
-from typing import List, Dict, Any, Optional, Literal
+from typing import Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
 
