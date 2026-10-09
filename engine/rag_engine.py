@@ -355,6 +355,39 @@ class ProductionRAGPipeline:
             "model": "gemini-3.5-flash-lite",
         }
 
+    def run_ungrounded_comparison(self, query: str) -> Dict[str, Any]:
+        """Compares raw Gemini generation (zero-context hallucination risk) vs Grounded RAG with citations"""
+        t0 = time.perf_counter()
+
+        # 1. Zero-Context Gemini (Ungrounded / Hallucination Risk)
+        unprompt = ChatPromptTemplate.from_messages([
+            ("system", "You are an AI assistant. Answer the user's question directly from your pre-trained knowledge. If it asks about specific corporate policy or internal guidelines, provide your best general understanding."),
+            ("human", "{question}"),
+        ])
+        unchain = unprompt | self.llm | StrOutputParser()
+        raw_unanswer = unchain.invoke({"question": query})
+        unanswer = self._clean_str(raw_unanswer)
+
+        # 2. Grounded RAG with verified citations
+        rag_res = self.run_basic_rag(query, top_k=2)
+
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        tok_in = max(1, len(query + (rag_res.get("context_used", ""))) // 4)
+        tok_out = max(1, (len(unanswer) + len(rag_res["answer"])) // 4)
+        cost_usd = round((tok_in * 0.075 + tok_out * 0.30) / 1_000_000, 6)
+
+        return {
+            "query": query,
+            "ungrounded_answer": unanswer,
+            "grounded_answer": rag_res["answer"],
+            "retrieved_chunks": rag_res["retrieved_chunks"],
+            "latency_ms": latency_ms,
+            "tokens_in": tok_in,
+            "tokens_out": tok_out,
+            "cost_usd": cost_usd,
+            "analysis": "Notice how the Ungrounded LLM gives a plausible-sounding but generic or fabricated policy without citations, while Grounded RAG accurately quotes verified internal documents with chunk citations."
+        }
+
     def run_hybrid_search(self, query: str, top_k: int = 3, rrf_k: int = 60) -> Dict[str, Any]:
         """Milestone 2: Production Hybrid Search (Qdrant + BM25 + Reciprocal Rank Fusion)"""
         t0 = time.perf_counter()

@@ -111,6 +111,7 @@ class AppController {
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         this.closeMobileSidebar();
+        this.closeGlossaryModal();
       }
     });
 
@@ -169,8 +170,75 @@ class AppController {
       navigator.clipboard.writeText(codeText);
       const btn = document.getElementById("btnCopyCode");
       btn.innerText = "Copied! ✓";
-      setTimeout(() => { btn.innerText = "Copy Code"; }, 2000);
+      setTimeout(() => { btn.innerText = "📋 Copy"; }, 2000);
     });
+
+    // Download .py standalone script
+    const btnDownloadPy = document.getElementById("btnDownloadPy");
+    if (btnDownloadPy) {
+      btnDownloadPy.addEventListener("click", () => {
+        this.downloadBlueprintPy();
+      });
+    }
+
+    // Export .ipynb Jupyter Notebook
+    const btnExportNotebook = document.getElementById("btnExportNotebook");
+    if (btnExportNotebook) {
+      btnExportNotebook.addEventListener("click", () => {
+        this.exportBlueprintNotebook();
+      });
+    }
+
+    // Compare Mode Button
+    const btnCompare = document.getElementById("btnCompareMode");
+    if (btnCompare) {
+      btnCompare.addEventListener("click", () => {
+        this.runCompareMode();
+      });
+    }
+
+    // Export Trace JSON Button
+    const btnExportTrace = document.getElementById("btnExportTrace");
+    if (btnExportTrace) {
+      btnExportTrace.addEventListener("click", () => {
+        this.exportTraceJson();
+      });
+    }
+
+    // Glossary Modal Toggles & Search
+    const btnGlossary = document.getElementById("btnGlossaryToggle");
+    if (btnGlossary) {
+      btnGlossary.addEventListener("click", () => {
+        this.openGlossaryModal();
+      });
+    }
+
+    const btnCloseGlossary = document.getElementById("btnCloseGlossary");
+    if (btnCloseGlossary) {
+      btnCloseGlossary.addEventListener("click", () => {
+        this.closeGlossaryModal();
+      });
+    }
+
+    const txtGlossary = document.getElementById("txtGlossarySearch");
+    if (txtGlossary) {
+      txtGlossary.addEventListener("input", () => {
+        this.filterGlossary();
+      });
+    }
+
+    document.querySelectorAll(".glossary-filter-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        this.filterGlossaryByCategory(pill.dataset.cat);
+      });
+    });
+
+    const glossaryModal = document.getElementById("glossaryModal");
+    if (glossaryModal) {
+      glossaryModal.addEventListener("click", (e) => {
+        if (e.target === glossaryModal) this.closeGlossaryModal();
+      });
+    }
 
     // Initialize Milestone 2 Custom Document & Corpus Manager
     this.initM2CorpusManager();
@@ -268,6 +336,20 @@ class AppController {
       }
     }
 
+    // Compare Mode Button Visibility & Label
+    const btnCompare = document.getElementById("btnCompareMode");
+    if (btnCompare) {
+      if (isM1) {
+        btnCompare.style.display = "inline-flex";
+        btnCompare.innerHTML = `<span>⚖️</span> Compare Hallucination vs RAG`;
+      } else if (isM2) {
+        btnCompare.style.display = "inline-flex";
+        btnCompare.innerHTML = `<span>⚖️</span> Compare Retrieval Modes`;
+      } else {
+        btnCompare.style.display = "none";
+      }
+    }
+
     // Render Presets for this milestone
     this.renderPresetsForMilestone(milestoneId);
 
@@ -322,6 +404,8 @@ class AppController {
     try {
       const res = await fetch(`/api/code-blueprint/${mId}`);
       const data = await res.json();
+      this.currentBlueprintCode = data.code;
+      this.currentBlueprintTitle = data.title;
       document.getElementById("codeBlueprintTitle").innerText = data.title;
       document.getElementById("codeDisplayArea").innerText = data.code;
 
@@ -441,9 +525,24 @@ class AppController {
   }
 
   handleQueryResponse(mId, data) {
+    this.lastTraceData = {
+      milestone: mId,
+      timestamp: new Date().toISOString(),
+      ...data
+    };
+
     // Update Telemetry HUD
     const lat = data.latency_ms || 12;
     document.getElementById("hudLatency").innerText = `${lat} ms`;
+
+    if (data.tokens_in !== undefined && data.tokens_out !== undefined) {
+      const hudTok = document.getElementById("hudTokens");
+      if (hudTok) hudTok.innerText = `${data.tokens_in} in / ${data.tokens_out} out`;
+    }
+    if (data.cost_usd !== undefined) {
+      const hudCost = document.getElementById("hudCost");
+      if (hudCost) hudCost.innerText = `$${data.cost_usd.toFixed(5)}`;
+    }
 
     // Display Answer
     const answer = data.answer || data.final_answer || (data.parsed_schema ? "Extracted and validated structured claim." : "Completed.");
@@ -1239,6 +1338,265 @@ class AppController {
     if (backdrop) backdrop.classList.remove("open");
     if (hamburger) hamburger.classList.remove("open");
     document.body.classList.remove("sidebar-open");
+  }
+
+  // --- Compare Mode (Ungrounded vs Grounded RAG) ---
+  async runCompareMode() {
+    const query = document.getElementById("txtQueryInput").value.trim();
+    if (!query) return;
+
+    const mId = this.activeMilestone;
+    const btnCompare = document.getElementById("btnCompareMode");
+    btnCompare.disabled = true;
+    btnCompare.innerHTML = `<span>⏳</span> Comparing...`;
+
+    document.getElementById("hudLatency").innerText = "executing...";
+    document.getElementById("answerDisplay").innerHTML = `<div style="color: var(--text-muted); font-style: italic;">Running side-by-side comparison with Google Gemini...</div>`;
+
+    try {
+      if (mId === "m1") {
+        const res = await fetch("/api/m1/compare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+        const data = await res.json();
+        this.lastTraceData = { milestone: "m1_compare", timestamp: new Date().toISOString(), ...data };
+
+        // Update Telemetry HUD
+        document.getElementById("hudLatency").innerText = `${data.latency_ms} ms`;
+        if (data.tokens_in) document.getElementById("hudTokens").innerText = `${data.tokens_in} in / ${data.tokens_out} out`;
+        if (data.cost_usd) document.getElementById("hudCost").innerText = `$${data.cost_usd.toFixed(5)}`;
+
+        // Render side-by-side compare card in answerDisplay
+        document.getElementById("answerDisplay").innerHTML = `
+          <div class="compare-view-grid">
+            <div class="compare-col col-ungrounded">
+              <div class="compare-col-header">
+                <span class="compare-col-title" style="color: var(--accent-rose);">❌ Without RAG (Zero Context)</span>
+                <span class="m-pill" style="background: rgba(244, 63, 94, 0.15); border-color: var(--accent-rose); color: var(--accent-rose); font-size: 10px;">Pre-trained Guess</span>
+              </div>
+              <div class="compare-col-body">${data.ungrounded_answer.replace(/\n/g, "<br>")}</div>
+            </div>
+            <div class="compare-col col-grounded">
+              <div class="compare-col-header">
+                <span class="compare-col-title" style="color: var(--accent-emerald);">✅ Grounded RAG (Vector Search)</span>
+                <span class="m-pill" style="background: rgba(16, 185, 129, 0.15); border-color: var(--accent-emerald); color: var(--accent-emerald); font-size: 10px;">Grounded Fact</span>
+              </div>
+              <div class="compare-col-body">${data.grounded_answer.replace(/\n/g, "<br>")}</div>
+            </div>
+          </div>
+          <div class="compare-callout-box">
+            <span>💡</span>
+            <div><strong>Pedagogical Insight:</strong> ${data.analysis}</div>
+          </div>
+        `;
+
+        if (data.retrieved_chunks) {
+          Visualizers.renderM1Chunks(data.retrieved_chunks);
+        }
+        this.switchResultTab("tabAnswer");
+      } else if (mId === "m2") {
+        await this.runActiveQuery();
+        this.switchResultTab("tabVisual");
+      }
+    } catch (e) {
+      document.getElementById("answerDisplay").innerHTML = `<div style="color: var(--accent-rose);">Comparison error: ${e.message}</div>`;
+    } finally {
+      btnCompare.disabled = false;
+      if (mId === "m1") {
+        btnCompare.innerHTML = `<span>⚖️</span> Compare Hallucination vs RAG`;
+      } else {
+        btnCompare.innerHTML = `<span>⚖️</span> Compare Retrieval Modes`;
+      }
+    }
+  }
+
+  // --- Trace JSON Export ---
+  exportTraceJson() {
+    if (!this.lastTraceData) {
+      alert("No active execution trace yet. Run a query first to inspect live telemetry.");
+      return;
+    }
+    const filename = `ai_studio_trace_${this.activeMilestone}_${Date.now()}.json`;
+    const jsonStr = JSON.stringify(this.lastTraceData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // --- Standalone Python Script Download (.py) ---
+  downloadBlueprintPy() {
+    const code = document.getElementById("codeDisplayArea").innerText;
+    const filename = `milestone_${this.activeMilestone}_blueprint.py`;
+    const blob = new Blob([code], { type: "text/x-python" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // --- Executable Jupyter Notebook Export (.ipynb) ---
+  exportBlueprintNotebook() {
+    const code = document.getElementById("codeDisplayArea").innerText;
+    const mId = this.activeMilestone;
+    const cfg = MILESTONE_CONFIG[mId] || { title: "AI Engineering Milestone" };
+
+    const notebook = {
+      cells: [
+        {
+          cell_type: "markdown",
+          metadata: {},
+          source: [
+            `# 🚀 AI Engineering Studio: ${cfg.title || mId.toUpperCase()}\n`,
+            `\n`,
+            `> **Architecture:** ${cfg.subcategory || "Production Pattern"}\n`,
+            `> **Problem Solved:** ${cfg.problem || "Enterprise GenAI"}\n`,
+            `\n`,
+            `Run this notebook in Google Colab, JupyterLab, or VS Code.\n`
+          ]
+        },
+        {
+          cell_type: "code",
+          execution_count: null,
+          metadata: {},
+          outputs: [],
+          source: [
+            `# Step 1: Install production dependencies\n`,
+            `!pip install -q langchain langchain-core langchain-community langchain-google-genai langchain-qdrant qdrant-client rank-bm25 langgraph pydantic fastmcp\n`
+          ]
+        },
+        {
+          cell_type: "code",
+          execution_count: null,
+          metadata: {},
+          outputs: [],
+          source: [
+            `# Step 2: Configure Gemini API Key\n`,
+            `import os\n`,
+            `# os.environ["GEMINI_API_KEY"] = "your-api-key-here"\n`,
+            `assert "GEMINI_API_KEY" in os.environ, "Please set GEMINI_API_KEY environment variable"\n`
+          ]
+        },
+        {
+          cell_type: "code",
+          execution_count: null,
+          metadata: {},
+          outputs: [],
+          source: code.split("\n").map(line => line + "\n")
+        },
+        {
+          cell_type: "markdown",
+          metadata: {},
+          source: [
+            `### 💡 Key Production Takeaways:\n`,
+            `- Open-source repo: https://github.com/Ajmal0197/ai-engineering-studio\n`,
+            `- Live Playground Demo: https://ai-engineering-studio-gi6o.onrender.com/\n`
+          ]
+        }
+      ],
+      metadata: {
+        language_info: { name: "python", version: "3.12" }
+      },
+      nbformat: 4,
+      nbformat_minor: 4
+    };
+
+    const jsonStr = JSON.stringify(notebook, null, 2);
+    const filename = `milestone_${mId}_notebook.ipynb`;
+    const blob = new Blob([jsonStr], { type: "application/x-ipynb+json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // --- Searchable GenAI Glossary Modal ---
+  async openGlossaryModal() {
+    const modal = document.getElementById("glossaryModal");
+    if (!modal) return;
+    modal.style.display = "flex";
+
+    if (!this.glossaryTerms || this.glossaryTerms.length === 0) {
+      try {
+        const res = await fetch("/api/glossary");
+        const data = await res.json();
+        this.glossaryTerms = data.terms || [];
+      } catch (e) {
+        console.warn("Failed to load glossary:", e);
+      }
+    }
+    this.renderGlossaryCards(this.glossaryTerms);
+    const searchInput = document.getElementById("txtGlossarySearch");
+    if (searchInput) searchInput.focus();
+  }
+
+  closeGlossaryModal() {
+    const modal = document.getElementById("glossaryModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  renderGlossaryCards(terms) {
+    const container = document.getElementById("glossaryCardsContainer");
+    if (!container) return;
+
+    if (!terms || terms.length === 0) {
+      container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-dim); padding: 32px;">No concepts match your search criteria.</div>`;
+      return;
+    }
+
+    container.innerHTML = terms.map(t => `
+      <div class="glossary-card">
+        <div class="glossary-card-header">
+          <span class="glossary-card-term">${t.term}</span>
+          <span class="glossary-card-category">${t.category}</span>
+        </div>
+        <div class="glossary-card-def">${t.definition}</div>
+        <div class="glossary-card-analogy">💡 <strong>Analogy:</strong> ${t.analogy}</div>
+        ${t.snippet ? `<div class="glossary-card-snippet"><code>${t.snippet}</code></div>` : ""}
+        ${t.alternatives ? `<div class="glossary-card-alts">🔄 <strong>Alternatives:</strong> ${t.alternatives}</div>` : ""}
+      </div>
+    `).join("");
+  }
+
+  filterGlossary() {
+    const query = (document.getElementById("txtGlossarySearch")?.value || "").toLowerCase().trim();
+    const activeCatBtn = document.querySelector(".glossary-filter-pill.active");
+    const activeCat = activeCatBtn ? activeCatBtn.dataset.cat : "all";
+
+    let filtered = this.glossaryTerms || [];
+    if (activeCat && activeCat !== "all") {
+      filtered = filtered.filter(t => t.category === activeCat);
+    }
+    if (query) {
+      filtered = filtered.filter(t => 
+        t.term.toLowerCase().includes(query) || 
+        t.definition.toLowerCase().includes(query) ||
+        (t.analogy && t.analogy.toLowerCase().includes(query))
+      );
+    }
+    this.renderGlossaryCards(filtered);
+  }
+
+  filterGlossaryByCategory(cat) {
+    document.querySelectorAll(".glossary-filter-pill").forEach(pill => {
+      pill.classList.toggle("active", pill.dataset.cat === cat);
+    });
+    this.filterGlossary();
   }
 }
 

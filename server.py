@@ -8,7 +8,7 @@ LangChain, LangGraph, Qdrant, BM25, and Pydantic integrations.
 import os
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -192,9 +192,31 @@ def m1_chunk(req: ChunkRequest):
         "sample_chunks": samples,
     }
 
+def estimate_tokens_and_cost(prompt_text: str, completion_text: str) -> Dict[str, Any]:
+    """Production token and cost estimation based on standard Gemini 3.5 Flash pricing"""
+    tok_in = max(1, len(prompt_text or "") // 4)
+    tok_out = max(1, len(completion_text or "") // 4)
+    # Gemini 3.5 Flash: $0.075 per 1M input tokens, $0.30 per 1M output tokens
+    cost = round((tok_in * 0.075 + tok_out * 0.30) / 1_000_000, 6)
+    return {
+        "tokens_in": tok_in,
+        "tokens_out": tok_out,
+        "tokens_total": tok_in + tok_out,
+        "cost_usd": cost,
+    }
+
+
 @app.post("/api/m1/query")
 def m1_query(req: QueryRequest):
-    return rag_pipeline.run_basic_rag(req.query, top_k=req.top_k or 2)
+    res = rag_pipeline.run_basic_rag(req.query, top_k=req.top_k or 2)
+    tok_stats = estimate_tokens_and_cost(res.get("context_used", "") + req.query, res.get("answer", ""))
+    res.update(tok_stats)
+    return res
+
+@app.post("/api/m1/compare")
+def m1_compare(req: QueryRequest):
+    """Side-by-side comparison: Ungrounded (hallucination risk) vs Grounded RAG with citations"""
+    return rag_pipeline.run_ungrounded_comparison(req.query)
 
 
 # --- Milestone 2: Hybrid Search & Custom Document Management ---
@@ -271,23 +293,34 @@ def m2_reset_documents():
 
 @app.post("/api/m2/hybrid")
 def m2_hybrid(req: QueryRequest):
-    return rag_pipeline.run_hybrid_search(
+    res = rag_pipeline.run_hybrid_search(
         query=req.query,
         top_k=req.top_k or 3,
         rrf_k=req.rrf_k or 60,
     )
+    context_str = " ".join([f.get("text", "") for f in res.get("fused_results", [])])
+    tok_stats = estimate_tokens_and_cost(context_str + req.query, res.get("answer", ""))
+    res.update(tok_stats)
+    return res
 
 
 # --- Milestone 3: Single ReAct Agent ---
 @app.post("/api/m3/react")
 def m3_react(req: QueryRequest):
-    return react_agent.run(req.query)
+    res = react_agent.run(req.query)
+    trace_text = str(res.get("trace", []))
+    tok_stats = estimate_tokens_and_cost(req.query + trace_text, res.get("final_answer", ""))
+    res.update(tok_stats)
+    return res
 
 
 # --- Milestone 4: Multi-Agent Orchestrator ---
 @app.post("/api/m4/multi-agent")
 def m4_multi_agent(req: QueryRequest):
-    return multi_agent.run(req.query)
+    res = multi_agent.run(req.query)
+    tok_stats = estimate_tokens_and_cost(req.query, res.get("final_answer", ""))
+    res.update(tok_stats)
+    return res
 
 
 # --- Milestone 5: FastMCP & Structured Output ---
@@ -297,16 +330,22 @@ def m5_mcp_manifest():
 
 @app.post("/api/m5/extract-claim")
 def m5_extract_claim(req: QueryRequest):
-    return mcp_engine.parse_structured_claim(req.query)
+    res = mcp_engine.parse_structured_claim(req.query)
+    tok_stats = estimate_tokens_and_cost(req.query, str(res.get("parsed_schema", {})))
+    res.update(tok_stats)
+    return res
 
 
 # --- Milestone 6: Production Guardrails & LLM-as-a-Judge Evaluation ---
 @app.post("/api/m6/evaluate")
 def m6_evaluate(req: EvalRequest):
-    return eval_guard_engine.run(
+    res = eval_guard_engine.run(
         user_query=req.query,
         strictness_threshold=req.strictness_threshold or 0.80
     )
+    tok_stats = estimate_tokens_and_cost(req.query, str(res.get("verdict", {})))
+    res.update(tok_stats)
+    return res
 
 
 # --- Code Studio: Interactive Concept Explainer (Details + Analogy + Alternatives) ---
@@ -365,6 +404,131 @@ def get_prerequisites_doc():
         "title": "AI Engineering Prerequisites & Core Foundations",
         "doc_length": len(content),
         "content": content
+    }
+
+# --- GenAI Concept Glossary Endpoint ---
+GLOSSARY_ITEMS = [
+    {
+        "term": "Vector Embeddings",
+        "category": "RAG & Retrieval",
+        "definition": "High-dimensional float vectors (e.g. 768 or 1536 dims) that mathematically encode semantic meaning. Closer vectors indicate conceptually related thoughts.",
+        "analogy": "GPS coordinates for concepts: 'PTO' and 'Vacation' end up right next to each other on the mathematical map.",
+        "snippet": "embeddings = GoogleGenerativeAIEmbeddings(model='models/gemini-embedding-2')\nvec = embeddings.embed_query('company leave policy')",
+        "alternatives": "OpenAI text-embedding-3-small, Cohere Embed v3, BGE-M3 (Open-source)."
+    },
+    {
+        "term": "RecursiveCharacterTextSplitter",
+        "category": "RAG & Retrieval",
+        "definition": "LangChain's standard hierarchical chunker that splits documents along natural boundaries (paragraphs, lines, sentences) to preserve context.",
+        "analogy": "Cutting a textbook cleanly along paragraph borders rather than blindly slicing right through the middle of a sentence.",
+        "snippet": "splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=60)\nchunks = splitter.split_documents(documents)",
+        "alternatives": "SemanticChunker (splits by embedding distance shifts), TokenTextSplitter, MarkdownHeaderTextSplitter."
+    },
+    {
+        "term": "HNSW (Hierarchical Navigable Small World)",
+        "category": "RAG & Retrieval",
+        "definition": "The industry standard graph-based index for Approximate Nearest Neighbor (ANN) vector search, providing sub-millisecond similarity lookups.",
+        "analogy": "Six Degrees of Kevin Bacon for vectors: uses fast express layers to pinpoint nearest semantic neighbors in logarithmic time.",
+        "snippet": "client = QdrantClient(location=':memory:')\n# In-memory HNSW graph constructed per collection",
+        "alternatives": "FAISS IVF-Flat, ScaNN (Google), Annoy (Spotify)."
+    },
+    {
+        "term": "BM25 (Best Matching 25)",
+        "category": "RAG & Retrieval",
+        "definition": "A probabilistic sparse keyword ranking algorithm that scores documents based on exact term frequency (TF) and inverse document frequency (IDF).",
+        "analogy": "The precision index at the back of a medical encyclopedia: finds exact mention of a rare drug code or error code immediately.",
+        "snippet": "bm25 = BM25Retriever.from_documents(chunks)\nbm25.k = 6\nmatches = bm25.invoke('Error E-4502')",
+        "alternatives": "TF-IDF (un-normalized), Elasticsearch / OpenSearch, SPLADE (neural sparse)."
+    },
+    {
+        "term": "Reciprocal Rank Fusion (RRF)",
+        "category": "RAG & Retrieval",
+        "definition": "A robust rank-aggregation formula scoring documents as sum(1 / (k + rank)) across multiple retrievers (dense vectors and sparse BM25).",
+        "analogy": "Olympic decathlon scoring: awards points based on placement ranks rather than raw arbitrary score scales, eliminating calibration bias.",
+        "snippet": "score = sum(1.0 / (60 + rank) for rank in [dense_rank, bm25_rank])",
+        "alternatives": "Cross-Encoder Re-rankers (Cohere Rerank, BGE-Reranker), Convex Linear Combination (alpha*dense + beta*sparse)."
+    },
+    {
+        "term": "LCEL (LangChain Expression Language)",
+        "category": "RAG & Retrieval",
+        "definition": "A declarative, composable syntax using the Unix pipe operator (|) to chain retrievers, prompts, LLMs, and parsers with streaming support.",
+        "analogy": "An automated factory assembly conveyor belt: data glides from step to step with no messy intermediate boilerplate code.",
+        "snippet": "chain = {'context': retriever, 'question': lambda x: x} | prompt | llm | StrOutputParser()",
+        "alternatives": "Raw Python functions, Haystack Pipelines, DSPy signatures."
+    },
+    {
+        "term": "ReAct Agent Pattern",
+        "category": "Agents & Graphs",
+        "definition": "An agent architecture interleaving reasoning traces (Thoughts) with action execution (Tool calls) and environmental observations in a loop.",
+        "analogy": "A software engineer debugging an outage: observes an alert, forms a hypothesis, runs a terminal command, and inspects the result.",
+        "snippet": "@tool\ndef calculator(expr: str): ...\nagent = create_react_agent(llm, tools=[calculator])",
+        "alternatives": "Plan-and-Solve (batches plan up-front), OpenAI Assistants API, Single-turn Tool Calling."
+    },
+    {
+        "term": "LangGraph StateGraph",
+        "category": "Agents & Graphs",
+        "definition": "A cyclical graph-based state machine orchestration framework where nodes are functions and edges define transitions and conditional branching.",
+        "analogy": "A visual electrical circuit or state flowchart where cycles and human-in-the-loop pauses are explicitly inspectable.",
+        "snippet": "workflow = StateGraph(AgentState)\nworkflow.add_node('agent', call_model)\nworkflow.add_conditional_edges('agent', should_continue)",
+        "alternatives": "CrewAI (agent crews), Microsoft AutoGen, Semantic Kernel."
+    },
+    {
+        "term": "Multi-Agent Supervisor",
+        "category": "Agents & Graphs",
+        "definition": "A hierarchical architectural pattern where a central supervisor LLM classifies incoming intent and delegates tasks to domain specialist agents.",
+        "analogy": "A hospital ER triage nurse: routes patients to orthopedics, cardiology, or radiology without doing all specialist procedures alone.",
+        "snippet": "class RouteDecision(BaseModel):\n    next_agent: Literal['SearchAgent', 'ReasoningAgent', 'FINISH']\nsupervisor = llm.with_structured_output(RouteDecision)",
+        "alternatives": "Decentralized Peer-to-Peer Agent Mesh, Round-Robin Consensus, Single Mega-Prompt."
+    },
+    {
+        "term": "FastMCP & Model Context Protocol",
+        "category": "Protocols & Schemas",
+        "definition": "Anthropic's open standardized client-server protocol (JSON-RPC 2.0) allowing AI models to securely discover and invoke tools across processes.",
+        "analogy": "USB-C for AI: any model can plug into any local tool, database, or API using one universal wire protocol standard.",
+        "snippet": "mcp = FastMCP('EnterpriseAssistant')\n@mcp.tool()\ndef submit_expense(emp_id: str, amount: float): ...",
+        "alternatives": "OpenAI Function Calling Schemas, OpenAPI / Swagger specs, gRPC services."
+    },
+    {
+        "term": "Pydantic v2 Structured Output",
+        "category": "Protocols & Schemas",
+        "definition": "Enforces strict type safety, field regex validation, and schemas on LLM outputs at runtime using Python type hints and Rust validation.",
+        "analogy": "A security turnstile with passport verification: malformed AI responses are caught and rejected before touching the database.",
+        "snippet": "class ExpenseClaim(BaseModel):\n    emp_id: str = Field(pattern=r'^EMP-\\d{3,4}$')\n    amount: float = Field(gt=0)\nstructured_llm = llm.with_structured_output(ExpenseClaim)",
+        "alternatives": "JSON Schema direct validation, Instructor library, Outlines (guided grammar decoding)."
+    },
+    {
+        "term": "Ragas Triad Evaluation",
+        "category": "Evaluation & Safety",
+        "definition": "A 3-dimensional assessment framework for RAG: Faithfulness (hallucination-free), Answer Relevancy (on-topic), and Context Precision (retrieval quality).",
+        "analogy": "A three-judge court panel: Judge 1 verifies the witness told no lies, Judge 2 checks relevance, Judge 3 verifies the evidence quality.",
+        "snippet": "scorecard = {'faithfulness': 0.95, 'answer_relevancy': 0.92, 'context_precision': 0.88}",
+        "alternatives": "TruLens RAG Triad, DeepEval, Phoenix Evals (Arize), Human Ground-Truth Annotation."
+    },
+    {
+        "term": "Input Guardrail Shield",
+        "category": "Evaluation & Safety",
+        "definition": "A perimeter security filter that intercepts prompt injections, jailbreaks, PII leaks, and toxic content before any retrieval or inference executes.",
+        "analogy": "Airport TSA security metal detector: contraband and adversarial payloads are confiscated at the terminal gate before boarding.",
+        "snippet": "if re.search(r'ignore previous instructions', query, re.I):\n    return SecurityVerdict(passed=False, reason='Prompt Injection Intercepted')",
+        "alternatives": "Llama Guard, NeMo Guardrails (NVIDIA), Lakera Guard, AWS Bedrock Guardrails."
+    },
+    {
+        "term": "Circuit Breaker Pattern",
+        "category": "Evaluation & Safety",
+        "definition": "A resilience pattern that halts automated response delivery and routes to a human operator when grounding scores fall below SLA thresholds.",
+        "analogy": "An electrical fuse: trips automatically during an overload to prevent a fire.",
+        "snippet": "if faithfulness_score < 0.80:\n    return {'status': 'TRIPPED', 'fallback': 'Response held for human review due to low grounding SLA'}",
+        "alternatives": "Gradual feature degradation, retry with higher temperature, fallback to canned response."
+    }
+]
+
+@app.get("/api/glossary")
+def get_glossary():
+    """Returns the comprehensive, searchable GenAI concept glossary"""
+    return {
+        "status": "success",
+        "total_terms": len(GLOSSARY_ITEMS),
+        "terms": GLOSSARY_ITEMS,
     }
 
 

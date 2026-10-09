@@ -48,10 +48,21 @@
         <span class="hud-label">Latency:</span>
         <span class="hud-val" id="hudLatency">-- ms</span>
       </div>
+      <div class="hud-item" id="hudTokensItem">
+        <span class="hud-label">Tokens:</span>
+        <span class="hud-val" id="hudTokens">-- in / -- out</span>
+      </div>
+      <div class="hud-item" id="hudCostItem">
+        <span class="hud-label">Est. Cost:</span>
+        <span class="hud-val" id="hudCost">$0.00000</span>
+      </div>
     </div>
 
     <!-- View & Mode Toggles -->
     <div class="top-controls">
+      <button class="btn-presenter btn-glossary-nav" id="btnGlossaryToggle" title="Open Searchable GenAI Concepts Glossary">
+        <span>📖</span> Glossary
+      </button>
       <div class="view-mode-toggle">
         <button class="mode-btn" data-mode="visual" id="btnModeVisual">Visual Lab</button>
         <button class="mode-btn active" data-mode="split" id="btnModeSplit">Split View</button>
@@ -230,7 +241,7 @@
             <div class="controls-row" id="milestoneKnobsRow">
               <div class="control-item">
                 <label class="control-label">
-                  <span>Chunk Size (chars):</span>
+                  <span>Chunk Size (chars): <span class="knob-hint-icon" title="Splits documents into character windows. 300 chars captures approx. 1–2 paragraphs. Too small (<100) cuts context; too large (>1000) dilutes vector similarity.">ℹ️</span></span>
                   <span id="lblChunkSize">300</span>
                 </label>
                 <input type="range" min="150" max="800" step="50" value="300" class="slider-input" id="sliderChunkSize">
@@ -238,7 +249,7 @@
 
               <div class="control-item">
                 <label class="control-label">
-                  <span>Chunk Overlap (chars):</span>
+                  <span>Chunk Overlap (chars): <span class="knob-hint-icon" title="Preserves continuity between consecutive chunk boundaries. 20% overlap (60 chars on 300) prevents losing sentences cut across boundaries.">ℹ️</span></span>
                   <span id="lblChunkOverlap">60</span>
                 </label>
                 <input type="range" min="0" max="150" step="10" value="60" class="slider-input" id="sliderChunkOverlap">
@@ -246,7 +257,7 @@
 
               <div class="control-item" id="itemRRFK" style="display: none;">
                 <label class="control-label">
-                  <span>RRF Constant (k):</span>
+                  <span>RRF Constant (k): <span class="knob-hint-icon" title="Cormack's rank smoothing constant in formula 1/(k + rank). Dampens high-rank outliers so dense and sparse retrievers have balanced weight. Standard industry value is 60.">ℹ️</span></span>
                   <span id="lblRRFK">60</span>
                 </label>
                 <input type="range" min="10" max="100" step="5" value="60" class="slider-input" id="sliderRRFK">
@@ -254,7 +265,7 @@
 
               <div class="control-item" id="itemStrictness" style="display: none;">
                 <label class="control-label">
-                  <span>Faithfulness SLA Threshold:</span>
+                  <span>Faithfulness SLA Threshold: <span class="knob-hint-icon" title="Ragas Triad safety threshold. The minimum ratio of atomic claims that must have explicit source citations before tripping the circuit breaker.">ℹ️</span></span>
                   <span id="lblStrictness">0.80</span>
                 </label>
                 <input type="range" min="0.50" max="0.95" step="0.05" value="0.80" class="slider-input" id="sliderStrictness">
@@ -368,6 +379,9 @@
               <button class="btn-run-query" id="btnRunQuery">
                 <span>⚡</span> Run Live Lab
               </button>
+              <button class="btn-compare-action" id="btnCompareMode" title="Compare Pre-trained Hallucination vs Grounded RAG with citations">
+                <span>⚖️</span> Compare Hallucination vs RAG
+              </button>
             </div>
           </div>
 
@@ -388,6 +402,12 @@
 
             <!-- Tab 2: Execution Trace -->
             <div class="tab-content" id="tabTrace">
+              <div class="trace-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; color: var(--text-dim);">Live pipeline telemetry & step-by-step reasoning spans</span>
+                <button type="button" class="btn-trace-export" id="btnExportTrace" title="Export trace telemetry as JSON">
+                  <span>📥</span> Export Trace (JSON)
+                </button>
+              </div>
               <div class="trace-timeline" id="traceTimeline">
                 <div style="font-size: 12px; color: var(--text-dim); padding: 12px;">No active trace yet. Run a query to inspect live pipeline execution.</div>
               </div>
@@ -418,7 +438,11 @@
           <div class="code-card">
             <div class="code-card-header">
               <div class="code-title" id="codeBlueprintTitle">Milestone 1: Basic RAG Pipeline (LangChain LCEL)</div>
-              <button class="btn-copy-code" id="btnCopyCode">Copy Code</button>
+              <div class="code-actions-group">
+                <button class="btn-code-action" id="btnCopyCode" title="Copy code snippet to clipboard">📋 Copy</button>
+                <button class="btn-code-action" id="btnDownloadPy" title="Download as runnable standalone Python file">📥 .py</button>
+                <button class="btn-code-action" id="btnExportNotebook" title="Export as Jupyter Notebook (.ipynb) with explanations">📓 .ipynb</button>
+              </div>
             </div>
             <pre class="code-display" id="codeDisplayArea" title="Double click or select any code token to view details, real-world analogy, and industry alternatives"># Loading Python code blueprint...</pre>
           </div>
@@ -470,6 +494,39 @@
     <div class="popover-actions">
       <button class="popover-btn popover-btn-secondary" id="popoverCopyBtn">📋 Copy Symbol</button>
       <button class="popover-btn popover-btn-primary" id="popoverPinInspectorBtn">🔍 Open in Visual Inspector</button>
+    </div>
+  </div>
+
+  <!-- Searchable GenAI Glossary Modal -->
+  <div id="glossaryModal" class="glossary-modal-overlay" style="display: none;">
+    <div class="glossary-modal-card">
+      <div class="glossary-modal-header">
+        <div class="glossary-header-title">
+          <span>📖</span>
+          <div>
+            <h3>GenAI & Agent Engineering Glossary</h3>
+            <p>Essential terminology, formulas, and production primitives from Milestones 1–6</p>
+          </div>
+        </div>
+        <button type="button" class="glossary-close-btn" id="btnCloseGlossary" title="Close Glossary (Esc)">&times;</button>
+      </div>
+
+      <div class="glossary-search-bar">
+        <span class="glossary-search-icon">🔍</span>
+        <input type="text" id="txtGlossarySearch" placeholder="Search concept, formula, or architecture (e.g. HNSW, RRF, ReAct, FastMCP, Faithfulness)..." class="glossary-search-input">
+      </div>
+
+      <div class="glossary-filter-pills" id="glossaryFilterPills">
+        <button type="button" class="glossary-filter-pill active" data-cat="all">All Concepts</button>
+        <button type="button" class="glossary-filter-pill" data-cat="RAG & Retrieval">RAG & Retrieval</button>
+        <button type="button" class="glossary-filter-pill" data-cat="Agents & Graphs">Agents & Graphs</button>
+        <button type="button" class="glossary-filter-pill" data-cat="Protocols & Schemas">Protocols & Schemas</button>
+        <button type="button" class="glossary-filter-pill" data-cat="Evaluation & Safety">Evaluation & Safety</button>
+      </div>
+
+      <div class="glossary-cards-container" id="glossaryCardsContainer">
+        <div style="text-align: center; color: var(--text-dim); padding: 24px;">Loading GenAI Glossary terms...</div>
+      </div>
     </div>
   </div>
 
