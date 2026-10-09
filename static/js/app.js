@@ -198,7 +198,16 @@ class AppController {
   }
 
   switchMilestone(milestoneId) {
+    const prevMilestone = this.activeMilestone;
     this.activeMilestone = milestoneId;
+
+    // Reset uploaded or inputted custom document when switching milestone tabs
+    if (prevMilestone && prevMilestone !== milestoneId) {
+      this.resetM2DrawerInputs();
+      if (prevMilestone === "m2") {
+        this.resetM2DefaultCorpus();
+      }
+    }
 
     // Update active nav button
     document.querySelectorAll(".milestone-nav-btn").forEach(btn => {
@@ -590,12 +599,14 @@ class AppController {
         tabUpload.classList.remove("active");
         document.getElementById("tabDocPaste").style.display = "block";
         document.getElementById("tabDocUpload").style.display = "none";
+        this.resetM2UploadedDoc();
       });
       tabUpload.addEventListener("click", () => {
         tabUpload.classList.add("active");
         tabPaste.classList.remove("active");
         document.getElementById("tabDocPaste").style.display = "none";
         document.getElementById("tabDocUpload").style.display = "block";
+        this.resetM2InputtedText();
       });
     }
 
@@ -662,6 +673,46 @@ class AppController {
     if (txtTitle && !txtTitle.value.trim()) {
       txtTitle.value = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
     }
+  }
+
+  resetM2DrawerInputs() {
+    const txtTitle = document.getElementById("txtDocTitle");
+    const txtContent = document.getElementById("txtDocContent");
+    const charCounter = document.getElementById("txtDocCharCount");
+    const fileInput = document.getElementById("fileDocInput");
+    const fileNameDisplay = document.getElementById("selectedFileName");
+    const dropzone = document.getElementById("fileDropzone");
+
+    if (txtTitle) txtTitle.value = "";
+    if (txtContent) txtContent.value = "";
+    if (charCounter) charCounter.innerText = "0 characters";
+    if (fileInput) fileInput.value = "";
+    if (fileNameDisplay) {
+      fileNameDisplay.style.display = "none";
+      fileNameDisplay.innerText = "";
+    }
+    if (dropzone) dropzone.classList.remove("dragover");
+  }
+
+  resetM2UploadedDoc() {
+    const fileInput = document.getElementById("fileDocInput");
+    const fileNameDisplay = document.getElementById("selectedFileName");
+    const dropzone = document.getElementById("fileDropzone");
+    if (fileInput) fileInput.value = "";
+    if (fileNameDisplay) {
+      fileNameDisplay.style.display = "none";
+      fileNameDisplay.innerText = "";
+    }
+    if (dropzone) dropzone.classList.remove("dragover");
+  }
+
+  resetM2InputtedText() {
+    const txtTitle = document.getElementById("txtDocTitle");
+    const txtContent = document.getElementById("txtDocContent");
+    const charCounter = document.getElementById("txtDocCharCount");
+    if (txtTitle) txtTitle.value = "";
+    if (txtContent) txtContent.value = "";
+    if (charCounter) charCounter.innerText = "0 characters";
   }
 
   async loadM2SampleDoc(sampleId) {
