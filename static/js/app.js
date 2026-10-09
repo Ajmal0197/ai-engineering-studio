@@ -83,12 +83,35 @@ class AppController {
   }
 
   bindEvents() {
+    // Mobile Hamburger & Backdrop toggle
+    const btnHamburger = document.getElementById("btnHamburger");
+    if (btnHamburger) {
+      btnHamburger.addEventListener("click", () => {
+        this.toggleMobileSidebar();
+      });
+    }
+
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", () => {
+        this.closeMobileSidebar();
+      });
+    }
+
     // Milestone navigation buttons
     document.querySelectorAll(".milestone-nav-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const m = btn.dataset.milestone;
         this.switchMilestone(m);
+        this.closeMobileSidebar();
       });
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.closeMobileSidebar();
+      }
     });
 
     // View mode toggle
@@ -851,6 +874,27 @@ class AppController {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  toggleMobileSidebar() {
+    const sidebar = document.getElementById("appSidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    const hamburger = document.getElementById("btnHamburger");
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle("open");
+    if (backdrop) backdrop.classList.toggle("open", isOpen);
+    if (hamburger) hamburger.classList.toggle("open", isOpen);
+    document.body.classList.toggle("sidebar-open", isOpen);
+  }
+
+  closeMobileSidebar() {
+    const sidebar = document.getElementById("appSidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    const hamburger = document.getElementById("btnHamburger");
+    if (sidebar) sidebar.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("open");
+    if (hamburger) hamburger.classList.remove("open");
+    document.body.classList.remove("sidebar-open");
   }
 }
 
