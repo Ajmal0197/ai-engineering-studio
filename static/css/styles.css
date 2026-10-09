@@ -58,14 +58,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 28px;
-  gap: 20px;
+  padding: 10px 20px;
+  gap: 14px;
   background: rgba(14, 17, 24, 0.92);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
 }
 
 .brand-section {
@@ -139,21 +143,30 @@ body {
 .telemetry-hud {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border-subtle);
-  padding: 6px 16px;
+  padding: 5px 12px;
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
-  font-size: 12px;
-  margin: 0 14px;
-  flex-shrink: 0;
+  font-size: 11.5px;
+  margin: 0 auto;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.telemetry-hud::-webkit-scrollbar {
+  display: none;
 }
 
 .hud-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .hud-label {
@@ -177,6 +190,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .badge-dot {
@@ -196,7 +210,7 @@ body {
 .top-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -1673,6 +1687,37 @@ body.presenter-mode .m-metaphor-box {
   }
 }
 
+@media (max-width: 1450px) {
+  .hud-item.hud-secondary {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .brand-subtitle {
+    display: none;
+  }
+  .hud-item.hud-tertiary {
+    display: none;
+  }
+  .btn-presenter-label {
+    display: none;
+  }
+  .btn-glossary-nav {
+    padding: 7px 12px !important;
+  }
+  .top-nav {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 1050px) {
+  .telemetry-hud {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .top-nav {
     padding: 10px 14px;
@@ -1689,6 +1734,7 @@ body.presenter-mode .m-metaphor-box {
   }
 
   .telemetry-hud {
+    display: flex !important;
     order: 3;
     width: 100%;
     overflow-x: auto;

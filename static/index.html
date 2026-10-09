@@ -28,7 +28,7 @@
     </div>
 
     <!-- Live Telemetry HUD -->
-    <div class="telemetry-hud">
+    <div class="telemetry-hud" id="topTelemetryHud">
       <div class="badge-live">
         <span class="badge-dot"></span> GEMINI LIVE
       </div>
@@ -36,23 +36,23 @@
         <span class="hud-label">LLM:</span>
         <span class="hud-val" id="hudModel">gemini-3.5-flash-lite</span>
       </div>
-      <div class="hud-item">
+      <div class="hud-item hud-secondary">
         <span class="hud-label">Vector DB:</span>
-        <span class="hud-val">Qdrant (:memory:)</span>
+        <span class="hud-val">Qdrant</span>
       </div>
-      <div class="hud-item">
+      <div class="hud-item hud-secondary">
         <span class="hud-label">Keyword:</span>
-        <span class="hud-val">BM25Okapi</span>
+        <span class="hud-val">BM25</span>
       </div>
       <div class="hud-item">
         <span class="hud-label">Latency:</span>
         <span class="hud-val" id="hudLatency">-- ms</span>
       </div>
-      <div class="hud-item" id="hudTokensItem">
+      <div class="hud-item hud-tertiary" id="hudTokensItem">
         <span class="hud-label">Tokens:</span>
         <span class="hud-val" id="hudTokens">-- in / -- out</span>
       </div>
-      <div class="hud-item" id="hudCostItem">
+      <div class="hud-item hud-tertiary" id="hudCostItem">
         <span class="hud-label">Est. Cost:</span>
         <span class="hud-val" id="hudCost">$0.00000</span>
       </div>
@@ -69,7 +69,7 @@
         <button class="mode-btn" data-mode="code" id="btnModeCode">Code Studio</button>
       </div>
       <button class="btn-presenter" id="btnPresenterToggle">
-        <span>🎓</span> Presenter Mode
+        <span>🎓</span> <span class="btn-presenter-label">Presenter Mode</span>
       </button>
     </div>
   </header>
